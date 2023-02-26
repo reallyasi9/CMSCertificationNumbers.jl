@@ -7,7 +7,8 @@ version = "0.1.0"
 InlineStrings = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
 
 [compat]
-julia = "1"
+InlineStrings = "1"
+julia = "1.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
