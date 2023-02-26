@@ -2,19 +2,28 @@ const MEDICAID_FACILITY_CODES = Dict{Char, String}(
     .=>(('A', 'B'), "NF (Formerly assigned to Medicaid SNF)")...,
     .=>(('E', 'F'), "NF (Formerly assigned to ICF)")...,
     .=>(('G', 'H'), "ICF/IID")...,
-    .=>(('J',), "Medicaid-Only")...,
+    .=>(('J',), "Medicaid-Only Hospital")...,
     .=>(('K',), "Medicaid HHA")...,
     .=>(('L',), "Psychiatric Residential Treatment Facility (PRTF)")...,
     .=>(('M',), "Psychiatric Unit of a CAH")...,
     .=>(('R',), "Rehabilitation Unit of a CAH")...,
-    .=>(('S',), "Psychiatric Unit of a Short-Term, Cancer, Children's, LTCH, or Rehabilitation Hospital")...,
-    .=>(('T',), "Rehabilitation Unit of a Short-Term, Canncer, Children's, LTCH, or Psychiatric Hospital")...,
-    .=>(('U',), "Swing-Bed Approval for Short-Term Hospitals")...,
-    .=>(('W',), "Swing-Bed Approval for Long-Term Care Hospitals")...,
-    .=>(('Z',), "Swing-Bed Approval for CAHs")...,
+    .=>(('S',), "Psychiatric Unit")...,
+    .=>(('T',), "Rehabilitation Unit")...,
+    .=>(('U',), "Swing-Bed Approval for Short-Term Hospital")...,
+    .=>(('W',), "Swing-Bed Approval for Long-Term Care Hospital")...,
+    .=>(('Z',), "Swing-Bed Approval for CAH")...,
 )
 
-const FACILITY_RANGES = Dict{UnitRange{Int64}, String}(
+const MEDICAID_HOSPITAL_RANGES = [
+    001:099 => "Short-term Acute Care Hospital",
+    100:199 => "Children's Hospital",
+    200:299 => "Children's Psychiatric Hospital",
+    300:399 => "Psychiatric Hospital",
+    400:499 => "Rehabilitation Hospital",
+    500:599 => "Long-term Hospital",
+]
+
+const FACILITY_RANGES = [
     0001:0879 => "Short-term (General and Specialty) Hospital",
     0880:0899 => "Hospital participating in ORD demonstration project",
     0900:0999 => "Multiple Hospital Component in a Medical Complex (Number Retired)",
@@ -54,7 +63,7 @@ const FACILITY_RANGES = Dict{UnitRange{Int64}, String}(
     9000:9799 => "Home Health Agency",
     9800:9899 => "Transplant Center",
     9900:9999 => "Reserved for Future Use",
-)
+]
 
 const EMERGENCY_CODES = Dict{Char, String}(
     'E' => "Non-Federal Emergency Hospital",
@@ -63,3 +72,16 @@ const EMERGENCY_CODES = Dict{Char, String}(
 
 const MEDICAID_TYPE_CODES = ('A', 'B', 'E', 'F', 'G', 'H', 'K', 'L', 'J')
 const IPPS_EXCLUDED_TYPE_CODES = ('M', 'R', 'S', 'T', 'U', 'W', 'Z')
+
+const IPPS_PARENT_HOSPITAL_TYPES = Dict{Char, Pair{String, String}}(
+    'A' => ("LTCH" => "20"),
+    'B' => ("LTCH" => "21"),
+    'C' => ("LTCH" => "22"),
+    'D' => ("Rehabilitation Hospital" => "30"),
+    'E' => ("Children's Hospital" => "33"),
+    'F' => ("Psychiatric Hospital" => "40"),
+    'G' => ("Psychiatric Hospital" => "41"),
+    'H' => ("Psychiatric Hospital" => "42"),
+    'J' => ("Psychiatric Hospital" => "43"),
+    'K' => ("Psychiatric Hospital" => "44"),
+)
