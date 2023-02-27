@@ -1,0 +1,7 @@
+Base.ncodeunits(c::CCN) = ncodeunits(c.number)
+# Base.isvalid(c::CCN, i::Integer) = isvalid(c.number, i)
+Base.codeunit(c::CCN) = codeunit(c.number)
+Base.codeunit(c::CCN, i::Integer) = codeunit(c.number, i)
+Base.iterate(c::CCN) = iterate(c.number)
+Base.iterate(c::CCN, i::Int64) = iterate(c.number, i)
+Base.transcode(T::Type, c::CCN) = transcode(T, String(c.number))

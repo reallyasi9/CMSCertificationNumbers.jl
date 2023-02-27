@@ -6,10 +6,6 @@ import Base: show, print, isvalid
 export MedicareProviderCCN, MedicaidOnlyProviderCCN, IPPSExcludedProviderCCN, EmergencyHospitalCCN, SupplierCCN
 export ccn, infer_ccn_type, clean_ccn, decode
 
-include("statecodes.jl")
-include("facilitytypecodes.jl")
-include("suppliercodes.jl")
-
 """
     CCN
 
@@ -20,9 +16,16 @@ A CCN is a 6- or 10-character alphanumeric string that encodes the provider or s
 
 CCNs can be constructed from `AbstractString` or `Integer` objects, but `Integer`s can only represent a subset of all possible CCNs.
 
+CCNs inherit from `AbstractString`, so methods like `length`, `get`, etc. are all defined and work as if the CCN were a string identifier.
+
 CCNs are defined by CMS Manual System publication number 100-07 "State Operations Provider Certification".
 """
-abstract type CCN end
+abstract type CCN <: AbstractString end
+
+include("abstractstringinterface.jl")
+include("statecodes.jl")
+include("facilitytypecodes.jl")
+include("suppliercodes.jl")
 
 abstract type ProviderCCN <: CCN end
 
@@ -138,8 +141,8 @@ function Base.tryparse(::Type{T}, s::AbstractString) where {T <: CCN}
     end
 end
 
-Base.show(io::IO, n::T) where {T <: CCN} = show(io, "$T(\"$(n.number)\")")
-Base.print(io::IO, n::T) where (T <: CCN) = print(io, n.number)
+Base.show(io::IO, ::MIME"text/plain", n::T) where {T <: CCN} = print(io, T, "(\"", n.number, "\")")
+Base.show(io::IO, n::CCN) = print(io, n.number)
 
 function Base.isvalid(c::MedicareProviderCCN)
     n = c.number
@@ -147,6 +150,18 @@ function Base.isvalid(c::MedicareProviderCCN)
     n[1:2] ∈ keys(STATE_CODES) || return false
     mapreduce(isdigit, &, n[4:6]) || return false
     return n[3] == 'P' || isdigit(n[3])
+end
+
+function Base.isvalid(::Type{T}, value) where {T <: CCN}
+    try
+        c = T(value)
+        return isvalid(c)
+    catch e
+        if isa(e, ArgumentError)
+            return false
+        end
+        rethrow()
+    end
 end
 
 function Base.isvalid(c::MedicaidOnlyProviderCCN)
