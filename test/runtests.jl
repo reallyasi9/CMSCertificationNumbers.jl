@@ -26,9 +26,9 @@ using Test
             # Floating point
             @test_throws MethodError ccn(MedicareProviderCCN, 1.0)
         end
-        @testset "print and repr" begin
-            @test repr(MedicareProviderCCN("123456")) == "\"MedicareProviderCCN(\\\"123456\\\")\""
-            @test "$(MedicareProviderCCN("123456"))" == "123456"
+        @testset "string and repr" begin
+            @test string(MedicareProviderCCN("123456")) == "123456"
+            @test repr(MIME("text/plain"), MedicareProviderCCN("123456")) == "MedicareProviderCCN(\"123456\")"
         end
         @testset "isvalid" begin
             @test isvalid(MedicareProviderCCN("123456"))
