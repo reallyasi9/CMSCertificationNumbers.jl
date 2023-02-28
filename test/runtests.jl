@@ -416,7 +416,6 @@ using Test
         @test findprev("2P", c, 5) == 2:3
         @test occursin(r"\D4\d", c) == true
         @test replace(c, r"\D4(\d)"=>s"hi\1") == "12hi56"
-        @test collect(eachsplit(c, "P4")) == ["12", "56"]
         @test split(c, "P4") == ["12", "56"]
         @test rsplit(c, "4", limit=2, keepempty=true) == ["12P", "56"]
         @test strip(c, ['1', '6']) == "2P45"
@@ -435,8 +434,7 @@ using Test
         @test lowercasefirst(c) == c
         @test join([c, c], ",") == "12P456,12P456"
         @test chop(c) == "12P45"
-        @test chopprefix(c, "12") == "P456"
-        @test chopsuffix(c, "56") == "12P4"
+
         @test chomp(c) == c
         @test thisind(c, 3) == 3
         @test nextind(c, 3) == 4
@@ -445,5 +443,11 @@ using Test
         @test isascii(c) == true
         @test escape_string(c) == c
         @test unescape_string(c) == c
+
+        if VERSION >= v"1.8"
+            @test collect(eachsplit(c, "P4")) == ["12", "56"]
+            @test chopprefix(c, "12") == "P456"
+            @test chopsuffix(c, "56") == "12P4"
+        end
     end
 end
