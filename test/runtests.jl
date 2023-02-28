@@ -36,19 +36,27 @@ using Test
         end
         @testset "isvalid" begin
             @test isvalid(MedicareProviderCCN("123456"))
+            @test [isvalid(MedicareProviderCCN("123456"), i) for i in 1:6] == fill(true, 6)
             @test isvalid(MedicareProviderCCN("12P456"))
+            @test [isvalid(MedicareProviderCCN("12P456"), i) for i in 1:6] == fill(true, 6)
             # Too many characters
             @test !isvalid(MedicareProviderCCN("1234567"))
+            @test [isvalid(MedicareProviderCCN("1234567"), i) for i in 1:7] == fill(true, 7) # all characters are valid
             # Not enough characters
             @test !isvalid(MedicareProviderCCN("12345"))
+            @test [isvalid(MedicareProviderCCN("12345"), i) for i in 1:5] == fill(true, 5) # all characters are valid
             # Invalid state code
             @test !isvalid(MedicareProviderCCN("XX3456"))
+            @test [isvalid(MedicareProviderCCN("XX3456"), i) for i in 1:6] == [false, false, true, true, true, true]
             # Invalid type code (lower case)
             @test !isvalid(MedicareProviderCCN("12p456"))
+            @test [isvalid(MedicareProviderCCN("12p456"), i) for i in 1:6] == [true, true, false, true, true, true]
             # Invalid type code (non-digit, not 'P')
             @test !isvalid(MedicareProviderCCN("12A456"))
+            @test [isvalid(MedicareProviderCCN("12A456"), i) for i in 1:6] == [true, true, false, true, true, true]
             # Invalid sequence number (non-digit)
             @test !isvalid(MedicareProviderCCN("12345E"))
+            @test [isvalid(MedicareProviderCCN("12345E"), i) for i in 1:6] == [true, true, true, true, true, false]
         end
         @testset "decode" begin
             @test state_code(MedicareProviderCCN("123456")) == "12"
