@@ -404,7 +404,7 @@ end
 
 function sequence_number(ccn::MedicaidOnlyProviderCCN)
     sequence = parse(Int64, ccn.number[4:6])
-    
+    type_code = ccn.number[3]
     if type_code == 'J'
         idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
         if isnothing(idx)
