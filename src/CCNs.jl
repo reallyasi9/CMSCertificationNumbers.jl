@@ -255,109 +255,214 @@ function Base.isvalid(::Type{T}, value) where {T <: CCN}
 end
 
 """
-    decode([io::IO = stdout], ccn)
+    state_code(ccn) -> String
 
-Decode `ccn` and write the information to `io`.
+Return the state code of `ccn` (the first two characters) as a `String`.
 """
-function decode(io::IO, ccn::MedicareProviderCCN)
-    print(io, ccn.number, ": Medicare Provider")
-    state_number = ccn.number[1:2]
-    state = get(STATE_CODES, state_number, "invalid state")
-    print(io, " in $state ($state_number)")
+state_code(ccn::CCN) = String(ccn.number[1:2])
+
+"""
+    INVALID_STATE
+
+A `String` that represents an invalid state code.
+"""
+const INVALID_STATE = "invalid state"
+
+"""
+    state(ccn) -> String
+
+Decode the state code of `ccn` and return it as a `String`.
+
+The first two characters of a CCN encode the "state" where the entity is located. "State" is
+interpreted loosely, as valid states include countries (like Canada) and territories (like
+(Guam).
+
+Returns `CCNs.INVALID_STATE` if the first two characters are not a valid state code.
+"""
+state(ccn::CCN) = get(STATE_CODES, ccn.number[1:2], INVALID_STATE)
+
+"""
+    facility_type_code(ccn) -> String
+
+Return the facility type code of `ccn` as a `String`.
+
+The facility type is dependent on the type of CCN, but usually involves the 3rd character of
+the code.
+"""
+function facility_type_code end
+
+function facility_type_code(ccn::MedicareProviderCCN)
     if ccn.number[3] == 'P'
-        type_code = "P"
-        type = "Organ Procurement Organization (OPO)"
-        sequence = parse(Int64, ccn.number[4:6])
+        return "P"
     else
         sequence = parse(Int64, ccn.number[3:6])
         idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
         if isnothing(idx)
-            type = "invalid facility type"
-            type_code = ccn.number[3:6]
+            return ccn.number[3:6]
         else
             val = FACILITY_RANGES[idx]
             range = first(val)
-            type_code = lpad(first(range), 4, '0') * "-" * lpad(last(range), 4, '0')
-            type = last(val)
-            sequence -= first(range)
+            return lpad(first(range), 4, '0') * "-" * lpad(last(range), 4, '0')
         end
     end
-    print(io, ", $type ($type_code) sequence number $sequence")
 end
 
-function decode(io::IO, ccn::MedicaidOnlyProviderCCN)
-    print(io, ccn.number, ": Medicaid-only Provider")
-    state_number = ccn.number[1:2]
-    state = get(STATE_CODES, state_number, "invalid state")
-    print(io, " in $state ($state_number)")
+facility_type_code(ccn::Union{MedicaidOnlyProviderCCN, IPPSExcludedProviderCCN, SupplierCCN}) = String(ccn.number[3])
 
+facility_type_code(ccn::EmergencyHospitalCCN) = String(ccn.number[6])
+
+"""
+    INVALID_FACILITY_TYPE
+
+A `String` representing an invalid facility type code for a given CCN type.
+"""
+const INVALID_FACILITY_TYPE = "invalid facility type"
+
+"""
+    facility_type(ccn) -> String
+
+Return a description of the facility type of `ccn` as a `String`.
+
+Returns `CCNs.INVALID_FACILITY_TYPE` if the facility type code is invalid for the CCN type.
+"""
+function facility_type end
+
+function facility_type(ccn::MedicareProviderCCN)
+    if ccn.number[3] == 'P'
+        return "Organ Procurement Organization (OPO)"
+    else
+        sequence = parse(Int64, ccn.number[3:6])
+        idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
+        if isnothing(idx)
+            return INVALID_FACILITY_TYPE
+        else
+            val = FACILITY_RANGES[idx]
+            return last(val)
+        end
+    end
+end
+
+function facility_type(ccn::MedicaidOnlyProviderCCN)
     type_code = ccn.number[3]
+    
+    if type_code == 'J'
+        sequence = parse(Int64, ccn.number[4:6])
+        idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
+        if isnothing(idx)
+            return INVALID_FACILITY_TYPE
+        else
+            val = MEDICAID_HOSPITAL_RANGES[idx]
+            return last(val)
+        end
+    else
+        return get(MEDICAID_FACILITY_CODES, type_code, INVALID_FACILITY_TYPE)
+    end
+end
+
+facility_type(ccn::IPPSExcludedProviderCCN) = get(MEDICAID_FACILITY_CODES, ccn.number[3], INVALID_FACILITY_TYPE)
+
+facility_type(ccn::EmergencyHospitalCCN) = get(EMERGENCY_CODES, ccn.number[6], INVALID_FACILITY_TYPE)
+
+facility_type(ccn::SupplierCCN) = get(SUPPLIER_CODES, ccn.number[3], INVALID_FACILITY_TYPE)
+
+"""
+    sequence_number(ccn) -> Int64
+
+Decode the sequence number from a given CCN.
+
+Sequence numbers are sometimes indefinite. If this is the case, then only the decodable
+digits of the sequence number are returned (typically the last digits).
+"""
+function sequence_number end
+
+function sequence_number(ccn::MedicareProviderCCN)
+    if ccn.number[3] == 'P'
+        return parse(Int64, ccn.number[4:6])
+    else
+        sequence = parse(Int64, ccn.number[3:6])
+        idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
+        if isnothing(idx)
+            return sequence
+        else
+            val = FACILITY_RANGES[idx]
+            range = first(val)
+            return sequence - first(range)
+        end
+    end
+end
+
+function sequence_number(ccn::MedicaidOnlyProviderCCN)
     sequence = parse(Int64, ccn.number[4:6])
     
     if type_code == 'J'
         idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
         if isnothing(idx)
-            type = "Medicaid-Only Hospital (invalid type)"
+            return sequence
         else
             val = MEDICAID_HOSPITAL_RANGES[idx]
             range = first(val)
-            type_code = "J" * lpad(first(range), 3, '0') * "-J" * lpad(last(range), 3, '0')
-            type = last(val)
-            sequence -= first(range)
+            return sequence - first(range)
         end
     else
-        type = get(MEDICAID_FACILITY_CODES, type_code, "invalid facility type")
+        return sequence
     end
-    print(io, ", $type ($type_code) sequence number $sequence")
 end
 
-function decode(io::IO, ccn::IPPSExcludedProviderCCN)
-    print(io, ccn.number, ": IPPS-Excluded Provider")
-    state_number = ccn.number[1:2]
-    state = get(STATE_CODES, state_number, "invalid state")
-    print(io, " in $state ($state_number)")
-
-    type_code = ccn.number[3]
+function sequence_number(ccn::IPPSExcludedProviderCCN)
     sequence_code = ccn.number[4:6]
-
-    type = get(MEDICAID_FACILITY_CODES, type_code, "invalid facility type")
-
     if !isdigit(sequence_code[1])
         parent_code = sequence_code[1]
         parent_type = get(IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
         sequence_code = last(parent_type) * sequence_code[2:end]
-        print(io, ", $type ($type_code) of parent $(first(parent_type)) ($parent_code) with sequence number ending in $sequence_code")
-    else
-        print(io, ", $type ($type_code) of parent with sequence number ending in $sequence_code")
     end
+    return parse(Int64, sequence_code)
 end
 
-function decode(io::IO, ccn::EmergencyHospitalCCN)
-    print(io, ccn.number, ": Emergency Hospital")
-    state_number = ccn.number[1:2]
-    state = get(STATE_CODES, state_number, "invalid state")
-    print(io, " in $state ($state_number)")
+sequence_number(ccn::EmergencyHospitalCCN) = parse(Int64, ccn.number[3:5])
 
-    type_code = ccn.number[6]
-    type = get(EMERGENCY_CODES, type_code, "invalid emergency hospital type")
+sequence_number(ccn::SupplierCCN) = parse(Int64, ccn.number[4:10])
 
-    sequence = parse(Int64, ccn.number[3:5])
-    
-    print(io, ", $type ($type_code) sequence number $sequence")
+const _TYPE_NAME = Dict(
+    MedicareProviderCCN => "Medicare Provider",
+    MedicaidOnlyProviderCCN => "Medicaid-only Provider",
+    IPPSExcludedProviderCCN => "IPPS-Excluded Provider",
+    EmergencyHospitalCCN => "Emergency Hospital",
+    SupplierCCN => "Supplier"
+)
+
+"""
+    decode([io::IO = stdout], ccn)
+
+Decode `ccn` and write the information to `io`.
+"""
+function decode end
+
+function decode(io::IO, ccn::T) where {T <: CCN}
+    state = state(ccn)
+    state_number = state_code(ccn)
+    type_code = facility_type_code(ccn)
+    type = facility_type(ccn)
+    sequence = sequence_number(ccn)
+    print(io, ccn.number, ": ", _TYPE_NAME[T], " in ", state, " (", state_number, ") ", type, " (", type_code, ") sequence number ", sequence)
 end
 
-function decode(io::IO, ccn::SupplierCCN)
-    print(io, ccn.number, ": Supplier")
-    state_number = ccn.number[1:2]
-    state = get(STATE_CODES, state_number, "invalid state")
-    print(io, " in $state ($state_number)")
+function decode(io::IO, ccn::IPPSExcludedProviderCCN)
+    state = state(ccn)
+    state_number = state_code(ccn)
+    type_code = facility_type_code(ccn)
+    type = facility_type(ccn)
 
-    type_code = ccn.number[3]
-    type = get(SUPPLIER_CODES, type_code, "invalid supplier type")
+    print(io, ccn.number, ": ", _TYPE_NAME[IPPSExcludedProviderCCN], " in ", state, " (", state_number, ") ", type, " (", type_code, ")")
 
-    sequence = parse(Int64, ccn.number[4:10])
-    
-    print(io, ", $type ($type_code) sequence number $sequence")
+    sequence_code = ccn.number[4:6]
+    if !isdigit(sequence_code[1])
+        parent_code = sequence_code[1]
+        parent_type = get(IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
+        sequence_code = last(parent_type) * sequence_code[2:end]
+        print(io, " of parent ", first(parent_type), " (", parent_code, ") with sequence number ending in ", sequence_code)
+    else
+        print(io, " of parent with sequence number ending in ", sequence_code)
+    end
 end
 
 decode(ccn::CCN) = decode(stdout, ccn)
