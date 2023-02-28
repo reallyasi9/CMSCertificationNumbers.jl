@@ -9,6 +9,17 @@ using Test
             # Doesn't fit within String7 size
             @test_throws ArgumentError MedicareProviderCCN("12345678")
         end
+        @testset "convert" begin
+            @test convert(MedicareProviderCCN, "123456") == MedicareProviderCCN("123456")
+            @test convert(MedicareProviderCCN, 123456) == MedicareProviderCCN("123456")
+            @test convert(MedicareProviderCCN, 123456.0) == MedicareProviderCCN("123456")
+        end
+        @testset "parse" begin
+            @test parse(MedicareProviderCCN, "123456") == MedicareProviderCCN("123456")
+            @test tryparse(MedicareProviderCCN, "123456") == MedicareProviderCCN("123456")
+            @test_throws ArgumentError parse(MedicareProviderCCN, "123456789")
+            @test tryparse(MedicareProviderCCN, "123456789") === nothing
+        end
         @testset "ccn function" begin
             @test ccn(MedicareProviderCCN, "123456") == MedicareProviderCCN("123456")
             @test ccn(MedicareProviderCCN, "QWERTY") == MedicareProviderCCN("QWERTY")
