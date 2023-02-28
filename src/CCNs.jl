@@ -335,14 +335,14 @@ function facility_type(ccn::MedicareProviderCCN)
         return "Organ Procurement Organization (OPO)"
     else
         try
-        sequence = parse(Int64, ccn.number[3:6])
-        idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
-        if isnothing(idx)
-            return INVALID_FACILITY_TYPE
-        else
-            val = FACILITY_RANGES[idx]
-            return last(val)
-        end
+            sequence = parse(Int64, ccn.number[3:6])
+            idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
+            if isnothing(idx)
+                return INVALID_FACILITY_TYPE
+            else
+                val = FACILITY_RANGES[idx]
+                return last(val)
+            end
         catch
             return INVALID_FACILITY_TYPE
         end
@@ -354,13 +354,13 @@ function facility_type(ccn::MedicaidOnlyProviderCCN)
     
     if type_code == 'J'
         try
-        sequence = parse(Int64, ccn.number[4:6])
-        idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
-        if isnothing(idx)
-            return INVALID_FACILITY_TYPE
-        else
-            val = MEDICAID_HOSPITAL_RANGES[idx]
-            return last(val)
+            sequence = parse(Int64, ccn.number[4:6])
+            idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
+            if isnothing(idx)
+                return INVALID_FACILITY_TYPE
+            else
+                val = MEDICAID_HOSPITAL_RANGES[idx]
+                return last(val)
             end
         catch
             return INVALID_FACILITY_TYPE

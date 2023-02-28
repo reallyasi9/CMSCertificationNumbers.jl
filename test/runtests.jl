@@ -5,7 +5,7 @@ using Test
     @testset "MedicareProviderCCN" begin
         @testset "constructor" begin
             @test MedicareProviderCCN("123456").number == "123456"
-            @test MedicareProviderCCN("QWERTYU").number == "QWERTYU"
+            @test MedicareProviderCCN("QWERTYU").number == "QWERTYU" # invalid, but direct constructor allows this
             # Doesn't fit within String7 size
             @test_throws ArgumentError MedicareProviderCCN("12345678")
         end
@@ -21,6 +21,7 @@ using Test
             @test tryparse(MedicareProviderCCN, "123456789") === nothing
         end
         @testset "ccn function" begin
+            # strings
             @test ccn(MedicareProviderCCN, "123456") == MedicareProviderCCN("123456")
             @test ccn(MedicareProviderCCN, "QWERTY") == MedicareProviderCCN("QWERTY")
             @test ccn(MedicareProviderCCN, "") == MedicareProviderCCN("000000")
@@ -28,9 +29,10 @@ using Test
             # Too many characters
             @test_throws ArgumentError ccn(MedicareProviderCCN, "QWERTYU")
 
+            # integers
             @test ccn(MedicareProviderCCN, 123456) == MedicareProviderCCN("123456")
             @test ccn(MedicareProviderCCN, 1) == MedicareProviderCCN("000001")
-            # Too many characters
+            # Too many digits
             @test_throws ArgumentError ccn(MedicareProviderCCN, 1234567)
             # Negative value
             @test_throws ArgumentError ccn(MedicareProviderCCN, -1)
