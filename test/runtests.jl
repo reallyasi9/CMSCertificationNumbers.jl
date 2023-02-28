@@ -169,6 +169,78 @@ using Test
         end
     end
 
+    @testset "IPPSExcludedProviderCCN" begin
+        @testset "constructor" begin
+            @test IPPSExcludedProviderCCN("12M456").number == "12M456"
+            @test IPPSExcludedProviderCCN("QWERTYU").number == "QWERTYU" # invalid, but direct constructor allows this
+            # Doesn't fit within String7 size
+            @test_throws ArgumentError IPPSExcludedProviderCCN("12M45678")
+        end
+        @testset "convert" begin
+            @test convert(IPPSExcludedProviderCCN, "12M456") == IPPSExcludedProviderCCN("12M456")
+        end
+        @testset "parse" begin
+            @test parse(IPPSExcludedProviderCCN, "12M456") == IPPSExcludedProviderCCN("12M456")
+            @test tryparse(IPPSExcludedProviderCCN, "12M456") == IPPSExcludedProviderCCN("12M456")
+            @test_throws ArgumentError parse(IPPSExcludedProviderCCN, "12M456789")
+            @test tryparse(IPPSExcludedProviderCCN, "12M456789") === nothing
+        end
+        @testset "ccn function" begin
+            # strings
+            @test ccn(IPPSExcludedProviderCCN, "12M456") == IPPSExcludedProviderCCN("12M456")
+            @test ccn(IPPSExcludedProviderCCN, "QWERTY") == IPPSExcludedProviderCCN("QWERTY")
+            @test ccn(IPPSExcludedProviderCCN, "") == IPPSExcludedProviderCCN("000000")
+            @test ccn(IPPSExcludedProviderCCN, "1") == IPPSExcludedProviderCCN("000001")
+            # Too many characters
+            @test_throws ArgumentError ccn(IPPSExcludedProviderCCN, "QWERTYU")
+        end
+        @testset "string and repr" begin
+            @test string(IPPSExcludedProviderCCN("12M456")) == "12M456"
+            @test repr(MIME("text/plain"), IPPSExcludedProviderCCN("12M456")) == "IPPSExcludedProviderCCN(\"12M456\")"
+        end
+        @testset "isvalid" begin
+            @test isvalid(IPPSExcludedProviderCCN("12M456"))
+            @test [isvalid(IPPSExcludedProviderCCN("12M456"), i) for i in 1:6] == fill(true, 6)
+            # Too many characters
+            @test !isvalid(IPPSExcludedProviderCCN("12M4567"))
+            @test [isvalid(IPPSExcludedProviderCCN("12M4567"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            # Not enough characters
+            @test !isvalid(IPPSExcludedProviderCCN("12M45"))
+            @test [isvalid(IPPSExcludedProviderCCN("12M45"), i) for i in 1:5] == fill(true, 5) # all characters are valid
+            # Invalid state code
+            @test !isvalid(IPPSExcludedProviderCCN("XXM456"))
+            @test [isvalid(IPPSExcludedProviderCCN("XXM456"), i) for i in 1:6] == [false, false, true, true, true, true]
+            # Invalid type code (lower case)
+            @test !isvalid(IPPSExcludedProviderCCN("12m456"))
+            @test [isvalid(IPPSExcludedProviderCCN("12m456"), i) for i in 1:6] == [true, true, false, true, true, true]
+            # Invalid type code
+            @test !isvalid(IPPSExcludedProviderCCN("12A456"))
+            @test [isvalid(IPPSExcludedProviderCCN("12A456"), i) for i in 1:6] == [true, true, false, true, true, true]
+            # Invalid sequence number (non-digit)
+            @test !isvalid(IPPSExcludedProviderCCN("12M45E"))
+            @test [isvalid(IPPSExcludedProviderCCN("12M45E"), i) for i in 1:6] == [true, true, true, true, true, false]
+        end
+        @testset "decode" begin
+            @test state_code(IPPSExcludedProviderCCN("12M456")) == "12"
+            @test state_code(IPPSExcludedProviderCCN("XXA456")) == "XX"
+            @test state(IPPSExcludedProviderCCN("12M456")) == "Hawaii"
+            @test state(IPPSExcludedProviderCCN("XX3456")) == CCNs.INVALID_STATE
+
+            @test facility_type_code(IPPSExcludedProviderCCN("12M456")) == "M"
+            @test facility_type(IPPSExcludedProviderCCN("12M456")) == "Psychiatric Unit of a CAH"
+            @test facility_type(IPPSExcludedProviderCCN("12X456")) == CCNs.INVALID_FACILITY_TYPE
+
+            @test sequence_number(IPPSExcludedProviderCCN("12M456")) == 456
+            @test_throws ArgumentError sequence_number(IPPSExcludedProviderCCN("12XXXX"))
+
+            @test decode(IPPSExcludedProviderCCN("12M456")) == "12M456: IPPS-Excluded Provider in Hawaii [12] Psychiatric Unit of a CAH [M] of parent with sequence number 456"
+            @test decode(IPPSExcludedProviderCCN("XXM456")) == "XXM456: IPPS-Excluded Provider in invalid state [XX] Psychiatric Unit of a CAH [M] of parent with sequence number 456"
+            @test decode(IPPSExcludedProviderCCN("120000")) == "120000: IPPS-Excluded Provider in Hawaii [12] invalid facility type [0] of parent with sequence number 0"
+            @test decode(IPPSExcludedProviderCCN("12MA56")) == "12MA56: IPPS-Excluded Provider in Hawaii [12] Psychiatric Unit of a CAH [M] of parent LTCH [A] with sequence number 2056"
+            @test_throws ArgumentError decode(IPPSExcludedProviderCCN("12MXXX"))
+        end
+    end
+
     @testset "AbstractString interface" begin
         c = MedicareProviderCCN("12P456")
 
