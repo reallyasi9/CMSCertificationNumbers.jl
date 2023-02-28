@@ -310,9 +310,9 @@ function facility_type_code(ccn::MedicareProviderCCN)
     end
 end
 
-facility_type_code(ccn::Union{MedicaidOnlyProviderCCN, IPPSExcludedProviderCCN, SupplierCCN}) = String(ccn.number[3])
+facility_type_code(ccn::Union{MedicaidOnlyProviderCCN, IPPSExcludedProviderCCN, SupplierCCN}) = String(ccn.number[3:3])
 
-facility_type_code(ccn::EmergencyHospitalCCN) = String(ccn.number[6])
+facility_type_code(ccn::EmergencyHospitalCCN) = String(ccn.number[6:6])
 
 """
     INVALID_FACILITY_TYPE
