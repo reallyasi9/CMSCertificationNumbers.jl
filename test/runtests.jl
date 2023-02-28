@@ -312,6 +312,77 @@ using Test
         end
     end
 
+    @testset "SupplierCCN" begin
+        @testset "constructor" begin
+            @test SupplierCCN("12C4567890").number == "12C4567890"
+            @test SupplierCCN("QWERTY").number == "QWERTY" # invalid, but direct constructor allows this
+            # Doesn't fit within String15 size
+            @test_throws ArgumentError SupplierCCN("12C4567890123456")
+        end
+        @testset "convert" begin
+            @test convert(SupplierCCN, "12C4567890") == SupplierCCN("12C4567890")
+        end
+        @testset "parse" begin
+            @test parse(SupplierCCN, "12C4567890") == SupplierCCN("12C4567890")
+            @test tryparse(SupplierCCN, "12C4567890") == SupplierCCN("12C4567890")
+            @test_throws ArgumentError parse(SupplierCCN, "12C4567890123456")
+            @test tryparse(SupplierCCN, "12C4567890123456") === nothing
+        end
+        @testset "ccn function" begin
+            # strings
+            @test ccn(SupplierCCN, "12C4567890") == SupplierCCN("12C4567890")
+            @test ccn(SupplierCCN, "QWERTYUIOP") == SupplierCCN("QWERTYUIOP")
+            @test ccn(SupplierCCN, "") == SupplierCCN("0000000000")
+            @test ccn(SupplierCCN, "1") == SupplierCCN("0000000001")
+            # Too many characters
+            @test_throws ArgumentError ccn(SupplierCCN, "QWERTYUIOPASDFGH")
+        end
+        @testset "string and repr" begin
+            @test string(SupplierCCN("12C4567890")) == "12C4567890"
+            @test repr(MIME("text/plain"), SupplierCCN("12C4567890")) == "SupplierCCN(\"12C4567890\")"
+        end
+        @testset "isvalid" begin
+            @test isvalid(SupplierCCN("12C4567890"))
+            @test [isvalid(SupplierCCN("12C4567890"), i) for i in 1:10] == fill(true, 10)
+            # Too many characters
+            @test !isvalid(SupplierCCN("12C45678901"))
+            @test [isvalid(SupplierCCN("12C45678901"), i) for i in 1:11] == fill(true, 11) # all characters are valid
+            # Not enough characters
+            @test !isvalid(SupplierCCN("12C456789"))
+            @test [isvalid(SupplierCCN("12C456789"), i) for i in 1:9] == fill(true, 9) # all characters are valid
+            # Invalid state code
+            @test !isvalid(SupplierCCN("XXC4567890"))
+            @test [isvalid(SupplierCCN("XXC4567890"), i) for i in 1:10] == [false, false, true, true, true, true, true, true, true, true]
+            # Invalid type code (lower case)
+            @test !isvalid(SupplierCCN("12c4567890"))
+            @test [isvalid(SupplierCCN("12c4567890"), i) for i in 1:10] == [true, true, false, true, true, true, true, true, true, true]
+            # Invalid type code
+            @test !isvalid(SupplierCCN("1234567890"))
+            @test [isvalid(SupplierCCN("1234567890"), i) for i in 1:10] == [true, true, false, true, true, true, true, true, true, true]
+            # Invalid sequence number (non-digit)
+            @test !isvalid(SupplierCCN("12C456789X"))
+            @test [isvalid(SupplierCCN("12C456789X"), i) for i in 1:10] == [true, true, true, true, true, true, true, true, true, false]
+        end
+        @testset "decode" begin
+            @test state_code(SupplierCCN("12C4567890")) == "12"
+            @test state_code(SupplierCCN("XXC4567890")) == "XX"
+            @test state(SupplierCCN("12C4567890")) == "Hawaii"
+            @test state(SupplierCCN("XXC4567890")) == CCNs.INVALID_STATE
+
+            @test facility_type_code(SupplierCCN("12C4567890")) == "C"
+            @test facility_type(SupplierCCN("12C4567890")) == "Ambulatory Surgical Center"
+            @test facility_type(SupplierCCN("12345X")) == CCNs.INVALID_FACILITY_TYPE
+
+            @test sequence_number(SupplierCCN("12C4567890")) == 4567890
+            @test_throws ArgumentError sequence_number(SupplierCCN("12CXXXXXXX"))
+
+            @test decode(SupplierCCN("12C4567890")) == "12C4567890: Supplier in Hawaii [12] Ambulatory Surgical Center [C] sequence number 4567890"
+            @test decode(SupplierCCN("XXC4567890")) == "XXC4567890: Supplier in invalid state [XX] Ambulatory Surgical Center [C] sequence number 4567890"
+            @test decode(SupplierCCN("1200000000")) == "1200000000: Supplier in Hawaii [12] invalid facility type [0] sequence number 0"
+            @test_throws ArgumentError decode(SupplierCCN("12CXXXXXXX"))
+        end
+    end
+
     @testset "AbstractString interface" begin
         c = MedicareProviderCCN("12P456")
 
