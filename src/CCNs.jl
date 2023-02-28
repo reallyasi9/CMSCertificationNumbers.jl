@@ -469,10 +469,11 @@ function decode(io::IO, ccn::IPPSExcludedProviderCCN)
     if !isdigit(sequence_code[1])
         parent_code = sequence_code[1]
         parent_type = get(IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
-        sequence_code = last(parent_type) * sequence_code[2:end]
-        print(io, " of parent ", first(parent_type), " [", parent_code, "] with sequence number ending in ", sequence_code)
+        sequence = parse(Int64, last(parent_type) * sequence_code[2:end])
+        print(io, " of parent ", first(parent_type), " [", parent_code, "] with sequence number ", sequence)
     else
-        print(io, " of parent with sequence number ending in ", sequence_code)
+        sequence = parse(Int64, sequence_code)
+        print(io, " of parent with sequence number ", sequence)
     end
 end
 
