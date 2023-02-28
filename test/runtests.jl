@@ -97,4 +97,68 @@ using Test
             @test_throws ArgumentError decode(MedicareProviderCCN("123XXX"))
         end
     end
+
+    @testset "AbstractString interface" begin
+        c = MedicareProviderCCN("12P456")
+
+        @test ncodeunits(c) == 6
+        @test codeunit(c) == UInt8
+        @test codeunit(c, 1) == 0x31 # '1' in UTF-8
+        @test iterate(c) == ('1', 2)
+        @test iterate(c, 2) == ('2', 3)
+        @test transcode(UInt16, c) == UInt16[0x0031, 0x0032, 0x0050, 0x0034, 0x0035, 0x0036] # "12P456" in UTF-16
+        @test reverse(c) == "654P21"
+
+        # surprisingly, everything else in the AbstractString interface follows from those definitions
+        @test length(c) == 6  # BEWARE: only valid characters are counted!
+        @test sizeof(c) == 6
+        @test c * "ABC" == "12P456ABC"
+        @test c^3 == "12P45612P45612P456"
+        @test repeat(c, 3) == "12P45612P45612P456"
+        @test String(c) == String("12P456")
+        @test SubString(c, 4:5) == "45"
+        @test c[4] == '4'
+        @test codeunits(c) == codeunits("12P456")
+        @test ascii(c) == "12P456"
+        @test isless(c, "12P457") == true
+        @test ==(c, "12P456")
+        @test cmp(c, "12P455") == 1
+        @test lpad(c, 10, 'x') == "xxxx12P456"
+        @test rpad(c, 10, 'x') == "12P456xxxx"
+        @test findfirst('4', c) == 4
+        @test findnext('4', c, 5) === nothing
+        @test findlast(<('5'), c) == 4
+        @test findprev("2P", c, 5) == 2:3
+        @test occursin(r"\D4\d", c) == true
+        @test replace(c, r"\D4(\d)"=>s"hi\1") == "12hi56"
+        @test collect(eachsplit(c, "P4")) == ["12", "56"]
+        @test split(c, "P4") == ["12", "56"]
+        @test rsplit(c, "4", limit=2, keepempty=true) == ["12P", "56"]
+        @test strip(c, ['1', '6']) == "2P45"
+        @test lstrip(c, ['1', '6']) == "2P456"
+        @test rstrip(c, ['1', '6']) == "12P45"
+        @test startswith(c, "12") == true
+        @test startswith(c, r"1\dp"i) == true
+        @test endswith(c, "56") == true
+        @test endswith(c, r"4\d6") == true
+        @test contains(c, r"P..6") == true
+        @test first(c, 2) == "12"
+        @test last(c, 2) == "56"
+        @test uppercase(c) == "12P456"
+        @test lowercase(c) == "12p456"
+        @test uppercasefirst(c) == titlecase(c) == "12P456"
+        @test lowercasefirst(c) == c
+        @test join([c, c], ",") == "12P456,12P456"
+        @test chop(c) == "12P45"
+        @test chopprefix(c, "12") == "P456"
+        @test chopsuffix(c, "56") == "12P4"
+        @test chomp(c) == c
+        @test thisind(c, 3) == 3
+        @test nextind(c, 3) == 4
+        @test prevind(c, 3) == 2
+        @test textwidth(c) == 6
+        @test isascii(c) == true
+        @test escape_string(c) == c
+        @test unescape_string(c) == c
+    end
 end
