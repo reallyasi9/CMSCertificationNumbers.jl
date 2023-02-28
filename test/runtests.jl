@@ -98,6 +98,77 @@ using Test
         end
     end
 
+    @testset "MedicaidOnlyProviderCCN" begin
+        @testset "constructor" begin
+            @test MedicaidOnlyProviderCCN("12A456").number == "12A456"
+            @test MedicaidOnlyProviderCCN("QWERTYU").number == "QWERTYU" # invalid, but direct constructor allows this
+            # Doesn't fit within String7 size
+            @test_throws ArgumentError MedicaidOnlyProviderCCN("12A45678")
+        end
+        @testset "convert" begin
+            @test convert(MedicaidOnlyProviderCCN, "12A456") == MedicaidOnlyProviderCCN("12A456")
+        end
+        @testset "parse" begin
+            @test parse(MedicaidOnlyProviderCCN, "12A456") == MedicaidOnlyProviderCCN("12A456")
+            @test tryparse(MedicaidOnlyProviderCCN, "12A456") == MedicaidOnlyProviderCCN("12A456")
+            @test_throws ArgumentError parse(MedicaidOnlyProviderCCN, "12A456789")
+            @test tryparse(MedicaidOnlyProviderCCN, "12A456789") === nothing
+        end
+        @testset "ccn function" begin
+            # strings
+            @test ccn(MedicaidOnlyProviderCCN, "12A456") == MedicaidOnlyProviderCCN("12A456")
+            @test ccn(MedicaidOnlyProviderCCN, "QWERTY") == MedicaidOnlyProviderCCN("QWERTY")
+            @test ccn(MedicaidOnlyProviderCCN, "") == MedicaidOnlyProviderCCN("000000")
+            @test ccn(MedicaidOnlyProviderCCN, "1") == MedicaidOnlyProviderCCN("000001")
+            # Too many characters
+            @test_throws ArgumentError ccn(MedicaidOnlyProviderCCN, "QWERTYU")
+        end
+        @testset "string and repr" begin
+            @test string(MedicaidOnlyProviderCCN("12A456")) == "12A456"
+            @test repr(MIME("text/plain"), MedicaidOnlyProviderCCN("12A456")) == "MedicaidOnlyProviderCCN(\"12A456\")"
+        end
+        @testset "isvalid" begin
+            @test isvalid(MedicaidOnlyProviderCCN("12A456"))
+            @test [isvalid(MedicaidOnlyProviderCCN("12A456"), i) for i in 1:6] == fill(true, 6)
+            # Too many characters
+            @test !isvalid(MedicaidOnlyProviderCCN("12A4567"))
+            @test [isvalid(MedicaidOnlyProviderCCN("12A4567"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            # Not enough characters
+            @test !isvalid(MedicaidOnlyProviderCCN("12A45"))
+            @test [isvalid(MedicaidOnlyProviderCCN("12A45"), i) for i in 1:5] == fill(true, 5) # all characters are valid
+            # Invalid state code
+            @test !isvalid(MedicaidOnlyProviderCCN("XXA456"))
+            @test [isvalid(MedicaidOnlyProviderCCN("XXA456"), i) for i in 1:6] == [false, false, true, true, true, true]
+            # Invalid type code (lower case)
+            @test !isvalid(MedicaidOnlyProviderCCN("12a456"))
+            @test [isvalid(MedicaidOnlyProviderCCN("12a456"), i) for i in 1:6] == [true, true, false, true, true, true]
+            # Invalid type code
+            @test !isvalid(MedicaidOnlyProviderCCN("12P456"))
+            @test [isvalid(MedicaidOnlyProviderCCN("12P456"), i) for i in 1:6] == [true, true, false, true, true, true]
+            # Invalid sequence number (non-digit)
+            @test !isvalid(MedicaidOnlyProviderCCN("12A45E"))
+            @test [isvalid(MedicaidOnlyProviderCCN("12A45E"), i) for i in 1:6] == [true, true, true, true, true, false]
+        end
+        @testset "decode" begin
+            @test state_code(MedicaidOnlyProviderCCN("12A456")) == "12"
+            @test state_code(MedicaidOnlyProviderCCN("XXA456")) == "XX"
+            @test state(MedicaidOnlyProviderCCN("12A456")) == "Hawaii"
+            @test state(MedicaidOnlyProviderCCN("XX3456")) == CCNs.INVALID_STATE
+
+            @test facility_type_code(MedicaidOnlyProviderCCN("12A456")) == "A"
+            @test facility_type(MedicaidOnlyProviderCCN("12A456")) == "NF (Formerly assigned to Medicaid SNF)"
+            @test facility_type(MedicaidOnlyProviderCCN("12X456")) == CCNs.INVALID_FACILITY_TYPE
+
+            @test sequence_number(MedicaidOnlyProviderCCN("12A456")) == 456
+            @test_throws ArgumentError sequence_number(MedicaidOnlyProviderCCN("12XXXX"))
+
+            @test decode(MedicaidOnlyProviderCCN("12A456")) == "12A456: Medicaid-only Provider in Hawaii [12] NF (Formerly assigned to Medicaid SNF) [A] sequence number 456"
+            @test decode(MedicaidOnlyProviderCCN("XXA456")) == "XXA456: Medicaid-only Provider in invalid state [XX] NF (Formerly assigned to Medicaid SNF) [A] sequence number 456"
+            @test decode(MedicaidOnlyProviderCCN("120000")) == "120000: Medicaid-only Provider in Hawaii [12] invalid facility type [0] sequence number 0"
+            @test_throws ArgumentError decode(MedicaidOnlyProviderCCN("123XXX"))
+        end
+    end
+
     @testset "AbstractString interface" begin
         c = MedicareProviderCCN("12P456")
 
