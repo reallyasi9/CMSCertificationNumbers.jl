@@ -133,6 +133,7 @@ end
 
 Base.convert(::Type{T}, s::AbstractString) where {T <: CCN} = ccn(T, s)
 Base.convert(::Type{T}, i::Integer) where {T <: CCN} = ccn(T, i)
+Base.convert(::Type{T}, n::Number) where {T <: CCN} = ccn(T, Integer(n))
 
 Base.parse(::Type{T}, s::AbstractString) where {T <: CCN} = ccn(T, s)
 function Base.tryparse(::Type{T}, s::AbstractString) where {T <: CCN}
