@@ -4,7 +4,7 @@ using InlineStrings
 import Base: show, print, isvalid
 
 export MedicareProviderCCN, MedicaidOnlyProviderCCN, IPPSExcludedProviderCCN, EmergencyHospitalCCN, SupplierCCN
-export ccn, infer_ccn_type, clean_ccn, decode
+export ccn, infer_ccn_type, clean_ccn, decode, state, state_code, facility_type, facility_type_code, sequence_number
 
 """
     CCN
