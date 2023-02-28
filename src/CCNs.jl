@@ -15,6 +15,9 @@ CCNs are a uniform way of identifying providers or suppliers who currently or wh
 A CCN is a 6- or 10-character alphanumeric string that encodes the provider or supplier's (respectively) State and facility type.
 
 CCNs can be constructed from `AbstractString` or `Integer` objects, but `Integer`s can only represent a subset of all possible CCNs.
+For the most performant parsing of stored data, directly construct the known CCN type using constructor calls like
+[`MedicareProviderCCN(s)`](@ref). For slightly less performance, use [`ccn(T<:CCN, s)`](@ref) or [`parse(T<:CCN, s)`](@ref) to canonicalize the format of `s`
+and perform simple error checking. To infer what type of CCN a given value represents, use [`infer_ccn_type(s)`](@ref).
 
 CCNs inherit from `AbstractString`, so methods like `length`, `get`, etc. are all defined and work as if the CCN were a string identifier.
 
@@ -50,34 +53,30 @@ struct SupplierCCN <: CCN
 end
 
 """
-    ccn([T::Type], s)
+    ccn([T::Type], s) -> CCN
 
 Construct a CCN from input `s`.
 
 # Arguments
-    - `T::Type` (optional) - The type of the CCN. If no type is given, the best guess of the type will be made based on the format of the input `s`.
-    - `s::Union{AbstractString,Integer}` - The input to parse to create the CCN.
+- `T::Type` (optional) - The type of the CCN. If no type is given, the best guess of the type will be made based on the format of the input `s`.
+- `s::Union{AbstractString,Integer}` - The input to parse to create the CCN.
 
 # Return value
 Returns a CCN of concrete type `T` if given, else the type will be inferred from format of `s`.
 """
 function ccn(::Type{SupplierCCN}, s::AbstractString)
-    pad = 10
-    length(s) > pad && throw(ArgumentError("SupplierCCN cannot be more than $pad characters in length"))
-    return SupplierCCN(String15(lpad(uppercase(s), pad, '0')))
+    c = clean_ccn(s; max_length=10)
+    return SupplierCCN(c)
 end
 
 function ccn(::Type{T}, s::AbstractString) where {T <: ProviderCCN}
-    pad = 6
-    length(s) > pad && throw(ArgumentError("$T cannot be more than $pad characters in length"))
-    return T(String7(lpad(uppercase(s), pad, '0')))
+    c = clean_ccn(s)
+    return T(c)
 end
 
 function ccn(::Type{T}, i::Integer) where {T <: ProviderCCN}
-    i < 0 && throw(ArgumentError("$T cannot be a negative number"))
-    pad = 6
-    ndigits(i) > pad && throw(ArgumentError("$T cannot be more than $pad digits in base 10"))
-    return T(String7(lpad(string(i), 6, '0')))
+    c = clean_ccn(i)
+    return T(c)
 end
 
 ccn(::Type{T}, n::Number) where {T <: CCN} = ccn(T, Integer(n))
@@ -88,50 +87,65 @@ function ccn(s::AbstractString)
     return ccn(T, c)
 end
 
-function clean_ccn(s::AbstractString)
-    ss = strip(s)
-    if ss[3] == "-" # dash sometimes appears between state code and remainder
+"""
+    clean_ccn(s; max_length=6) -> String
+
+Clean the given value `s` and return a `String` in canonical CCN format.
+
+Canonical CCN format is a string of uppercase alphanumeric characters left-padded with zeros
+to either 6 or 10 characters. Some datasets allow CCNs to have a hyphen in position 2
+separating the state code from the facility code, and some store the alphabetical characters
+in lower case.
+
+# Arguments
+- `s::Union{Integer,AbstractString}` - The value to clean.
+- `max_length::Integer = 6` - The maximum (and pad) length of the CCN. Should be either 6 (for providers) or 10 (for suppliers). Strings shorter than this length will be left-padded with zeros to this length.
+"""
+function clean_ccn end
+
+function clean_ccn(s::AbstractString; max_length::Integer = 6)
+    ss = uppercase(strip(s))
+    if length(ss) > 2 && ss[3] == "-" # dash sometimes appears between state code and remainder
         ss = ss[1:2] * ss[4:end]
     end
-    length(ss) > 10 && throw(ArgumentError("CCNs cannot be more than 10 characters in length"))
-    pad = length(ss) > 6 ? 10 : 6
-    return lpad(ss, pad, '0')
+    length(ss) > max_length && throw(ArgumentError("CCN cannot be more than $max_length characters in length"))
+    return lpad(ss, max_length, '0')
 end
 
-function clean_ccn(i::Integer)
+function clean_ccn(i::Integer; max_length::Integer = 6)
     i < 0 && throw(ArgumentError("CCNs cannot be negative"))
-    ndigits(i) > 6 && throw(ArgumentError("Integer CCNs cannot be more than 6 digits in base 10"))
-    return lpad(string(i; base=10), 6, '0')
+    ndigits(i) > max_length && throw(ArgumentError("Integer CCN cannot be more than $max_length digits in base 10"))
+    return lpad(string(i; base=10), max_length, '0')
 end
 
 """
-    infer_ccn_type(s) -> `Type{T} where T <: CCN`
+    infer_ccn_type(s) -> T<:CCN
 
-Infer the type of the CCN from the input.
+Infer the type of the CCN from a string in canonical CCN format.
 
 # Arguments
-    - `s::Union{AbstractString,Integer}` - The value to parse.
+- `s::Union{AbstractString,Integer}` - A value in canonical CCN format.
 
 # Return value
 The inferred type. Throws if the type cannot be inferred from the input.
+
+See also [`clean_ccn`](@ref).
 """
 function infer_ccn_type(s::AbstractString)
     length(s) ∉ (6, 10) && throw(ArgumentError("CCN must be a 6- or 10-character string"))
-    length(s) == 10 && return SupplierCCN
     tc = s[3]
-    tc ∈ MEDICAID_TYPE_CODES && return MedicaidOnlyProviderCCN
-    tc ∈ IPPS_EXCLUDED_TYPE_CODES && return IPPSExcludedProviderCCN
-    s[6] ∈ keys(EMERGENCY_CODES) && return EmergencyHospitalCCN
-    (tc == 'P' || isdigit(tc)) && return MedicareProviderCCN
+    if length(s) == 10 
+        return tc ∈ keys(SUPPLIER_CODES)
+    else
+        tc ∈ MEDICAID_TYPE_CODES && return MedicaidOnlyProviderCCN
+        tc ∈ IPPS_EXCLUDED_TYPE_CODES && return IPPSExcludedProviderCCN
+        s[6] ∈ keys(EMERGENCY_CODES) && return EmergencyHospitalCCN
+        (tc == 'P' || isdigit(tc)) && return MedicareProviderCCN
+    end
     throw(ArgumentError("CCN type cannot be inferred from '$s'"))
 end
 
-function ccn(i::Integer)
-    # can only be a MedicareProviderCCN
-    return ccn(MedicareProviderCCN, i)
-end
-
-Base.convert(::Type{T}, s::AbstractString) where {T <: CCN} = ccn(T, s)
+Base.convert(::Type{T}, s::AbstractString) where {T <: CCN} = T(s)
 Base.convert(::Type{T}, i::Integer) where {T <: CCN} = ccn(T, i)
 Base.convert(::Type{T}, n::Number) where {T <: CCN} = ccn(T, Integer(n))
 
@@ -267,7 +281,7 @@ state_code(ccn::CCN) = String(ccn.number[1:2])
 """
     INVALID_STATE
 
-A `String` that represents an invalid state code.
+A `String` representing an invalid state code.
 """
 const INVALID_STATE = "invalid state"
 
@@ -444,7 +458,7 @@ const _TYPE_NAME = Dict(
 """
     decode([io::IO], ccn)
 
-Decode `ccn` and either return the information as a `String` or write to `IO`.
+Decode `ccn` and either return the information as a `String` or print to `io`.
 """
 function decode end
 
