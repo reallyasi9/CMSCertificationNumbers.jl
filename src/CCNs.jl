@@ -80,6 +80,8 @@ function ccn(::Type{T}, i::Integer) where {T <: ProviderCCN}
     return T(String7(lpad(string(i), 6, '0')))
 end
 
+ccn(::Type{T}, n::Number) where {T <: CCN} = ccn(T, Integer(n))
+
 function ccn(s::AbstractString)
     c = clean_ccn(s)
     T = infer_ccn_type(c)

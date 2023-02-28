@@ -23,8 +23,12 @@ using Test
             @test_throws ArgumentError ccn(MedicareProviderCCN, 1234567)
             # Negative value
             @test_throws ArgumentError ccn(MedicareProviderCCN, -1)
-            # Floating point
-            @test_throws MethodError ccn(MedicareProviderCCN, 1.0)
+            
+            # other numbers
+            @test ccn(MedicareProviderCCN, 1.0) == MedicareProviderCCN("000001")
+            @test ccn(MedicareProviderCCN, Rational(5, 5)) == MedicareProviderCCN("000001")
+            # Inexact
+            @test_throws InexactError ccn(MedicareProviderCCN, 1.00000001)
         end
         @testset "string and repr" begin
             @test string(MedicareProviderCCN("123456")) == "123456"
