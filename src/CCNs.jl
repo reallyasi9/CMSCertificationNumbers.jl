@@ -434,40 +434,44 @@ const _TYPE_NAME = Dict(
 )
 
 """
-    decode([io::IO = stdout], ccn)
+    decode([io::IO], ccn)
 
-Decode `ccn` and write the information to `io`.
+Decode `ccn` and either return the information as a `String` or write to `IO`.
 """
 function decode end
 
 function decode(io::IO, ccn::T) where {T <: CCN}
-    state = state(ccn)
+    st = state(ccn)
     state_number = state_code(ccn)
     type_code = facility_type_code(ccn)
     type = facility_type(ccn)
     sequence = sequence_number(ccn)
-    print(io, ccn.number, ": ", _TYPE_NAME[T], " in ", state, " (", state_number, ") ", type, " (", type_code, ") sequence number ", sequence)
+    print(io, ccn.number, ": ", _TYPE_NAME[T], " in ", st, " [", state_number, "] ", type, " [", type_code, "] sequence number ", sequence)
 end
 
 function decode(io::IO, ccn::IPPSExcludedProviderCCN)
-    state = state(ccn)
+    st = state(ccn)
     state_number = state_code(ccn)
     type_code = facility_type_code(ccn)
     type = facility_type(ccn)
 
-    print(io, ccn.number, ": ", _TYPE_NAME[IPPSExcludedProviderCCN], " in ", state, " (", state_number, ") ", type, " (", type_code, ")")
+    print(io, ccn.number, ": ", _TYPE_NAME[IPPSExcludedProviderCCN], " in ", st, " [", state_number, "] ", type, " [", type_code, "]")
 
     sequence_code = ccn.number[4:6]
     if !isdigit(sequence_code[1])
         parent_code = sequence_code[1]
         parent_type = get(IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
         sequence_code = last(parent_type) * sequence_code[2:end]
-        print(io, " of parent ", first(parent_type), " (", parent_code, ") with sequence number ending in ", sequence_code)
+        print(io, " of parent ", first(parent_type), " [", parent_code, "] with sequence number ending in ", sequence_code)
     else
         print(io, " of parent with sequence number ending in ", sequence_code)
     end
 end
 
-decode(ccn::CCN) = decode(stdout, ccn)
+function decode(ccn::CCN)
+    buf = IOBuffer()
+    decode(buf, ccn)
+    return read(seekstart(buf), String)
+end
 
 end # Module

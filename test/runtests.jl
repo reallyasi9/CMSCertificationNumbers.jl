@@ -50,5 +50,30 @@ using Test
             # Invalid sequence number (non-digit)
             @test !isvalid(MedicareProviderCCN("12345E"))
         end
+        @testset "decode" begin
+            @test state_code(MedicareProviderCCN("123456")) == "12"
+            @test state_code(MedicareProviderCCN("XX3456")) == "XX"
+            @test state(MedicareProviderCCN("123456")) == "Hawaii"
+            @test state(MedicareProviderCCN("XX3456")) == CCNs.INVALID_STATE
+
+            @test facility_type_code(MedicareProviderCCN("123456")) == "3400-3499"
+            @test facility_type_code(MedicareProviderCCN("12P456")) == "P"
+            @test_throws ArgumentError facility_type_code(MedicareProviderCCN("12X456"))
+            @test facility_type(MedicareProviderCCN("123456")) == "Rural Health Clinic (Provider-based)"
+            @test facility_type(MedicareProviderCCN("12P456")) == "Organ Procurement Organization (OPO)"
+            @test facility_type(MedicareProviderCCN("12X456")) == CCNs.INVALID_FACILITY_TYPE
+
+            @test sequence_number(MedicareProviderCCN("123456")) == 56
+            @test sequence_number(MedicareProviderCCN("12P456")) == 456
+            @test sequence_number(MedicareProviderCCN("128600")) == 100
+            @test_throws ArgumentError sequence_number(MedicareProviderCCN("12XXXX"))
+
+            @test decode(MedicareProviderCCN("123456")) == "123456: Medicare Provider in Hawaii [12] Rural Health Clinic (Provider-based) [3400-3499] sequence number 56"
+            @test decode(MedicareProviderCCN("XX3456")) == "XX3456: Medicare Provider in invalid state [XX] Rural Health Clinic (Provider-based) [3400-3499] sequence number 56"
+            @test decode(MedicareProviderCCN("12P456")) == "12P456: Medicare Provider in Hawaii [12] Organ Procurement Organization (OPO) [P] sequence number 456"
+            @test decode(MedicareProviderCCN("120000")) == "120000: Medicare Provider in Hawaii [12] invalid facility type [0000] sequence number 0"
+            @test_throws ArgumentError decode(MedicareProviderCCN("12X456"))
+            @test_throws ArgumentError decode(MedicareProviderCCN("123XXX"))
+        end
     end
 end
