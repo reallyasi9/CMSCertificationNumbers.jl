@@ -238,7 +238,7 @@ function Base.isvalid(c::SupplierCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(STATE_CODES)
-    elseif n == 3
+    elseif i == 3
         return n[3] ∈ keys(SUPPLIER_CODES)
     else
         return isdigit(n[i])
