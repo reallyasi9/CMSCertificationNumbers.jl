@@ -241,6 +241,77 @@ using Test
         end
     end
 
+    @testset "EmergencyHospitalCCN" begin
+        @testset "constructor" begin
+            @test EmergencyHospitalCCN("12345E").number == "12345E"
+            @test EmergencyHospitalCCN("QWERTYU").number == "QWERTYU" # invalid, but direct constructor allows this
+            # Doesn't fit within String7 size
+            @test_throws ArgumentError EmergencyHospitalCCN("12345E78")
+        end
+        @testset "convert" begin
+            @test convert(EmergencyHospitalCCN, "12345E") == EmergencyHospitalCCN("12345E")
+        end
+        @testset "parse" begin
+            @test parse(EmergencyHospitalCCN, "12345E") == EmergencyHospitalCCN("12345E")
+            @test tryparse(EmergencyHospitalCCN, "12345E") == EmergencyHospitalCCN("12345E")
+            @test_throws ArgumentError parse(EmergencyHospitalCCN, "12345E789")
+            @test tryparse(EmergencyHospitalCCN, "12345E789") === nothing
+        end
+        @testset "ccn function" begin
+            # strings
+            @test ccn(EmergencyHospitalCCN, "12345E") == EmergencyHospitalCCN("12345E")
+            @test ccn(EmergencyHospitalCCN, "QWERTY") == EmergencyHospitalCCN("QWERTY")
+            @test ccn(EmergencyHospitalCCN, "") == EmergencyHospitalCCN("000000")
+            @test ccn(EmergencyHospitalCCN, "1") == EmergencyHospitalCCN("000001")
+            # Too many characters
+            @test_throws ArgumentError ccn(EmergencyHospitalCCN, "QWERTYU")
+        end
+        @testset "string and repr" begin
+            @test string(EmergencyHospitalCCN("12345E")) == "12345E"
+            @test repr(MIME("text/plain"), EmergencyHospitalCCN("12345E")) == "EmergencyHospitalCCN(\"12345E\")"
+        end
+        @testset "isvalid" begin
+            @test isvalid(EmergencyHospitalCCN("12345E"))
+            @test [isvalid(EmergencyHospitalCCN("12345E"), i) for i in 1:6] == fill(true, 6)
+            # Too many characters
+            @test !isvalid(EmergencyHospitalCCN("12345E7"))
+            @test [isvalid(EmergencyHospitalCCN("12345E7"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            # Not enough characters
+            @test !isvalid(EmergencyHospitalCCN("12345"))
+            @test [isvalid(EmergencyHospitalCCN("12345"), i) for i in 1:5] == fill(true, 5) # all characters are valid
+            # Invalid state code
+            @test !isvalid(EmergencyHospitalCCN("XX345E"))
+            @test [isvalid(EmergencyHospitalCCN("XX345E"), i) for i in 1:6] == [false, false, true, true, true, true]
+            # Invalid type code (lower case)
+            @test !isvalid(EmergencyHospitalCCN("12345e"))
+            @test [isvalid(EmergencyHospitalCCN("12345e"), i) for i in 1:6] == [true, true, true, true, true, false]
+            # Invalid type code
+            @test !isvalid(EmergencyHospitalCCN("12345X"))
+            @test [isvalid(EmergencyHospitalCCN("12345X"), i) for i in 1:6] == [true, true, true, true, true, false]
+            # Invalid sequence number (non-digit)
+            @test !isvalid(EmergencyHospitalCCN("1234XE"))
+            @test [isvalid(EmergencyHospitalCCN("1234XE"), i) for i in 1:6] == [true, true, true, true, false, true]
+        end
+        @testset "decode" begin
+            @test state_code(EmergencyHospitalCCN("12345E")) == "12"
+            @test state_code(EmergencyHospitalCCN("XX345E")) == "XX"
+            @test state(EmergencyHospitalCCN("12345E")) == "Hawaii"
+            @test state(EmergencyHospitalCCN("XX345E")) == CCNs.INVALID_STATE
+
+            @test facility_type_code(EmergencyHospitalCCN("12345E")) == "E"
+            @test facility_type(EmergencyHospitalCCN("12345E")) == "Non-Federal Emergency Hospital"
+            @test facility_type(EmergencyHospitalCCN("12345X")) == CCNs.INVALID_FACILITY_TYPE
+
+            @test sequence_number(EmergencyHospitalCCN("12345E")) == 345
+            @test_throws ArgumentError sequence_number(EmergencyHospitalCCN("12XXXE"))
+
+            @test decode(EmergencyHospitalCCN("12345E")) == "12345E: Emergency Hospital in Hawaii [12] Non-Federal Emergency Hospital [E] sequence number 345"
+            @test decode(EmergencyHospitalCCN("XX345E")) == "XX345E: Emergency Hospital in invalid state [XX] Non-Federal Emergency Hospital [E] sequence number 345"
+            @test decode(EmergencyHospitalCCN("120000")) == "120000: Emergency Hospital in Hawaii [12] invalid facility type [0] sequence number 0"
+            @test_throws ArgumentError decode(EmergencyHospitalCCN("12XXXE"))
+        end
+    end
+
     @testset "AbstractString interface" begin
         c = MedicareProviderCCN("12P456")
 
