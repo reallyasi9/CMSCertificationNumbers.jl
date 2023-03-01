@@ -1,4 +1,4 @@
-const STATE_CODES = Dict{String, String}(
+const _STATE_CODES = Dict{String, String}(
 	.=>(("01",), "Alabama")...,
 	.=>(("30",), "New Hampshire")...,
 	.=>(("02",), "Alaska")...,

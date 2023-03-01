@@ -232,12 +232,12 @@ See also [`clean_ccn`](@ref) to canonicalize a CCN string.
 function infer_ccn_type(s::AbstractString)
     length(s) ∉ (6, 10) && throw(ArgumentError("CCN must be a 6- or 10-character string"))
     tc = s[3]
-    if length(s) == 10 
-        return tc ∈ keys(SUPPLIER_CODES)
+    if length(s) == 10 && tc ∈ keys(_SUPPLIER_CODES)
+        return SupplierCCN
     else
         tc ∈ MEDICAID_TYPE_CODES && return MedicaidOnlyProviderCCN
         tc ∈ IPPS_EXCLUDED_TYPE_CODES && return IPPSExcludedProviderCCN
-        s[6] ∈ keys(EMERGENCY_CODES) && return EmergencyHospitalCCN
+        s[6] ∈ keys(_EMERGENCY_CODES) && return EmergencyHospitalCCN
         (tc == 'P' || isdigit(tc)) && return MedicareProviderCCN
     end
     throw(ArgumentError("CCN type cannot be inferred from '$s'"))
@@ -262,7 +262,7 @@ Base.show(io::IO, n::CCN) = print(io, n.number)
 function Base.isvalid(c::MedicareProviderCCN)
     n = c.number
     length(n) == 6 || return false
-    n[1:2] ∈ keys(STATE_CODES) || return false
+    n[1:2] ∈ keys(_STATE_CODES) || return false
     mapreduce(isdigit, &, n[4:6]) || return false
     return n[3] == 'P' || isdigit(n[3])
 end
@@ -270,7 +270,7 @@ end
 function Base.isvalid(c::MedicareProviderCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
-        return n[1:2] ∈ keys(STATE_CODES)
+        return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 3
         return n[3] == 'P' || isdigit(n[3])
     else
@@ -281,7 +281,7 @@ end
 function Base.isvalid(c::MedicaidOnlyProviderCCN)
     n = c.number
     length(n) == 6 || return false
-    n[1:2] ∈ keys(STATE_CODES) || return false
+    n[1:2] ∈ keys(_STATE_CODES) || return false
     n[3] ∈ MEDICAID_TYPE_CODES || return false
     return mapreduce(isdigit, &, n[4:6])
 end
@@ -289,7 +289,7 @@ end
 function Base.isvalid(c::MedicaidOnlyProviderCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
-        return n[1:2] ∈ keys(STATE_CODES)
+        return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 3
         return n[3] ∈ MEDICAID_TYPE_CODES
     else
@@ -300,7 +300,7 @@ end
 function Base.isvalid(c::IPPSExcludedProviderCCN)
     n = c.number
     length(n) == 6 || return false
-    n[1:2] ∈ keys(STATE_CODES) || return false
+    n[1:2] ∈ keys(_STATE_CODES) || return false
     n[3] ∈ IPPS_EXCLUDED_TYPE_CODES || return false
     isdigit(n[4]) || n[4] ∈ keys(IPPS_PARENT_HOSPITAL_TYPES) || return false
     return mapreduce(isdigit, &, n[5:6])
@@ -309,7 +309,7 @@ end
 function Base.isvalid(c::IPPSExcludedProviderCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
-        return n[1:2] ∈ keys(STATE_CODES)
+        return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 3
         return n[3] ∈ IPPS_EXCLUDED_TYPE_CODES
     elseif i == 4
@@ -322,17 +322,17 @@ end
 function Base.isvalid(c::EmergencyHospitalCCN)
     n = c.number
     length(n) == 6 || return false
-    n[1:2] ∈ keys(STATE_CODES) || return false
-    n[6] ∈ keys(EMERGENCY_CODES) || return false
+    n[1:2] ∈ keys(_STATE_CODES) || return false
+    n[6] ∈ keys(_EMERGENCY_CODES) || return false
     return mapreduce(isdigit, &, n[3:5])
 end
 
 function Base.isvalid(c::EmergencyHospitalCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
-        return n[1:2] ∈ keys(STATE_CODES)
+        return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 6
-        return n[6] ∈ keys(EMERGENCY_CODES)
+        return n[6] ∈ keys(_EMERGENCY_CODES)
     else
         return isdigit(n[i])
     end
@@ -341,17 +341,17 @@ end
 function Base.isvalid(c::SupplierCCN)
     n = c.number
     length(n) == 10 || return false
-    n[1:2] ∈ keys(STATE_CODES) || return false
-    n[3] ∈ keys(SUPPLIER_CODES) || return false
+    n[1:2] ∈ keys(_STATE_CODES) || return false
+    n[3] ∈ keys(_SUPPLIER_CODES) || return false
     return mapreduce(isdigit, &, n[4:10])
 end
 
 function Base.isvalid(c::SupplierCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
-        return n[1:2] ∈ keys(STATE_CODES)
+        return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 3
-        return n[3] ∈ keys(SUPPLIER_CODES)
+        return n[3] ∈ keys(_SUPPLIER_CODES)
     else
         return isdigit(n[i])
     end
@@ -394,7 +394,7 @@ interpreted loosely, as valid states include countries (like Canada) and territo
 
 Returns `CCNs.INVALID_STATE` if the first two characters are not a valid state code.
 """
-state(ccn::CCN) = get(STATE_CODES, ccn.number[1:2], INVALID_STATE)
+state(ccn::CCN) = get(_STATE_CODES, ccn.number[1:2], INVALID_STATE)
 
 """
     facility_type_code(ccn) -> String
@@ -411,11 +411,11 @@ function facility_type_code(ccn::MedicareProviderCCN)
         return "P"
     else
         sequence = parse(Int64, ccn.number[3:6])
-        idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
+        idx = findfirst(x -> sequence ∈ first(x), _FACILITY_RANGES)
         if isnothing(idx)
             return ccn.number[3:6]
         else
-            val = FACILITY_RANGES[idx]
+            val = _FACILITY_RANGES[idx]
             range = first(val)
             return lpad(first(range), 4, '0') * "-" * lpad(last(range), 4, '0')
         end
@@ -448,11 +448,11 @@ function facility_type(ccn::MedicareProviderCCN)
     else
         try
             sequence = parse(Int64, ccn.number[3:6])
-            idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
+            idx = findfirst(x -> sequence ∈ first(x), _FACILITY_RANGES)
             if isnothing(idx)
                 return INVALID_FACILITY_TYPE
             else
-                val = FACILITY_RANGES[idx]
+                val = _FACILITY_RANGES[idx]
                 return last(val)
             end
         catch
@@ -467,26 +467,26 @@ function facility_type(ccn::MedicaidOnlyProviderCCN)
     if type_code == 'J'
         try
             sequence = parse(Int64, ccn.number[4:6])
-            idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
+            idx = findfirst(x -> sequence ∈ first(x), _MEDICAID_HOSPITAL_RANGES)
             if isnothing(idx)
                 return INVALID_FACILITY_TYPE
             else
-                val = MEDICAID_HOSPITAL_RANGES[idx]
+                val = _MEDICAID_HOSPITAL_RANGES[idx]
                 return last(val)
             end
         catch
             return INVALID_FACILITY_TYPE
         end
     else
-        return get(MEDICAID_FACILITY_CODES, type_code, INVALID_FACILITY_TYPE)
+        return get(_MEDICAID_FACILITY_CODES, type_code, INVALID_FACILITY_TYPE)
     end
 end
 
-facility_type(ccn::IPPSExcludedProviderCCN) = get(MEDICAID_FACILITY_CODES, ccn.number[3], INVALID_FACILITY_TYPE)
+facility_type(ccn::IPPSExcludedProviderCCN) = get(_MEDICAID_FACILITY_CODES, ccn.number[3], INVALID_FACILITY_TYPE)
 
-facility_type(ccn::EmergencyHospitalCCN) = get(EMERGENCY_CODES, ccn.number[6], INVALID_FACILITY_TYPE)
+facility_type(ccn::EmergencyHospitalCCN) = get(_EMERGENCY_CODES, ccn.number[6], INVALID_FACILITY_TYPE)
 
-facility_type(ccn::SupplierCCN) = get(SUPPLIER_CODES, ccn.number[3], INVALID_FACILITY_TYPE)
+facility_type(ccn::SupplierCCN) = get(_SUPPLIER_CODES, ccn.number[3], INVALID_FACILITY_TYPE)
 
 """
     sequence_number(ccn) -> Int64
@@ -503,11 +503,11 @@ function sequence_number(ccn::MedicareProviderCCN)
         return parse(Int64, ccn.number[4:6])
     else
         sequence = parse(Int64, ccn.number[3:6])
-        idx = findfirst(x -> sequence ∈ first(x), FACILITY_RANGES)
+        idx = findfirst(x -> sequence ∈ first(x), _FACILITY_RANGES)
         if isnothing(idx)
             return sequence
         else
-            val = FACILITY_RANGES[idx]
+            val = _FACILITY_RANGES[idx]
             range = first(val)
             return sequence - first(range)
         end
@@ -518,11 +518,11 @@ function sequence_number(ccn::MedicaidOnlyProviderCCN)
     sequence = parse(Int64, ccn.number[4:6])
     type_code = ccn.number[3]
     if type_code == 'J'
-        idx = findfirst(x -> sequence ∈ first(x), MEDICAID_HOSPITAL_RANGES)
+        idx = findfirst(x -> sequence ∈ first(x), _MEDICAID_HOSPITAL_RANGES)
         if isnothing(idx)
             return sequence
         else
-            val = MEDICAID_HOSPITAL_RANGES[idx]
+            val = _MEDICAID_HOSPITAL_RANGES[idx]
             range = first(val)
             return sequence - first(range)
         end
