@@ -176,8 +176,12 @@ end
 
 ccn(::Type{T}, n::Number) where {T <: CCN} = ccn(T, Integer(n))
 
-function ccn(s::AbstractString)
-    c = clean_ccn(s)
+function ccn(s)
+    c = try
+        clean_ccn(s; max_length=6)
+    catch
+        clean_ccn(s; max_length=10)
+    end
     T = infer_ccn_type(c)
     return ccn(T, c)
 end
@@ -210,8 +214,9 @@ function clean_ccn(s::AbstractString; max_length::Integer = 6)
     return lpad(ss, max_length, '0')
 end
 
-function clean_ccn(i::Integer; max_length::Integer = 6)
-    i < 0 && throw(ArgumentError("CCNs cannot be negative"))
+function clean_ccn(n::Number; max_length::Integer = 6)
+    n < 0 && throw(ArgumentError("CCNs cannot be negative"))
+    i = Integer(n)
     ndigits(i) > max_length && throw(ArgumentError("Integer CCN cannot be more than $max_length digits in base 10"))
     return lpad(string(i; base=10), max_length, '0')
 end
@@ -244,8 +249,8 @@ function infer_ccn_type(s::AbstractString)
 end
 
 Base.convert(::Type{T}, s::AbstractString) where {T <: CCN} = T(s)
-Base.convert(::Type{T}, i::Integer) where {T <: CCN} = ccn(T, i)
-Base.convert(::Type{T}, n::Number) where {T <: CCN} = ccn(T, Integer(n))
+Base.convert(::Type{T}, i::Integer) where {T <: CCN} = T(string(i, base=10))
+Base.convert(::Type{T}, n::Number) where {T <: CCN} = T(string(Integer(n), base=10))
 
 Base.parse(::Type{T}, s::AbstractString) where {T <: CCN} = ccn(T, s)
 function Base.tryparse(::Type{T}, s::AbstractString) where {T <: CCN}
