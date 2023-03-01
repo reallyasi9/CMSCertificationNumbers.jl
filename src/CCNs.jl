@@ -30,24 +30,117 @@ include("statecodes.jl")
 include("facilitytypecodes.jl")
 include("suppliercodes.jl")
 
+"""
+    ProviderCCN
+
+An abstract type representing the various provider types that can be represented by a CCN.
+
+All ProviderCCNs use 6-character identifiers.
+"""
 abstract type ProviderCCN <: CCN end
 
+"""
+    MedicareProviderCCN
+    MedicareProviderCCN(n::AbstractString)
+
+A type representing a Medicare provider.
+
+Medicare providers use six-character identifiers with the following format:
+> `SSPQQQ`
+Where:
+- `SS` represent a two-character alphanumeric State Code;
+- `P` represents either an a literal 'P' character (for Organ Procurement Organizations) or the most significant digit of the Sequence Number;
+- `QQQ` represents the three least significant digits of the Sequence Number.
+
+The constructor performs no error checking, but will throw an exception if `n` has more than
+seven characters.
+"""
 struct MedicareProviderCCN <: ProviderCCN
     number::String7
 end
 
+"""
+    MedicaidOnlyProviderCCN
+    MedicaidOnlyProviderCCN(n::AbstractString)
+
+A type representing a Medicaid-Only provider.
+
+Medicid-Only providers use six-character identifiers with the following format:
+> `SSTQQQ`
+Where:
+- `SS` represent a two-character alphanumeric State Code;
+- `T` represents an alphabetical Facility Type Code;
+- `QQQ` represents a three-digit Sequence Number.
+
+The constructor performs no error checking, but will throw an exception if `n` has more than
+seven characters.
+"""
 struct MedicaidOnlyProviderCCN <: ProviderCCN
     number::String7
 end
 
+"""
+    IPPSExcludedProviderCCN
+    IPPSExcludedProviderCCN(n::AbstractString)
+
+A type representing a Medicare or Medicaid provider excluded from the Inpatient Prospective Payment System (IPPS).
+
+IPPS-Excluded providers use six-character identifiers with the following format:
+> `SSTAQQ`
+Where:
+- `SS` represent a two-character alphanumeric State Code;
+- `T` represents an alphabetical Facility Type Code;
+- `A` represents either an alphabetical Parent Facility Type Code (for IPPS-Excluded units of IPPS-Excluded parent facilities) or the most significant digit of the Sequence Number;
+- `QQ` represents the two least significant digits of the Sequence Number.
+
+!!! note
+    IPPS-Excluded providers are always subunits of parent facilities, and as such they are
+    not assigned their own CCN Sequence Number. The Sequence Number in the CCN will match
+    the least significant digits of the parent facility.
+
+The constructor performs no error checking, but will throw an exception if `n` has more than
+seven characters.
+"""
 struct IPPSExcludedProviderCCN <: ProviderCCN
     number::String7
 end
 
+"""
+    EmergencyHospitalCCN
+    EmergencyHospitalCCN(n::AbstractString)
+
+A type representing a designated Emergency Hospital provider.
+
+Emergency Hospital providers use six-character identifiers with the following format:
+> `SSQQQE`
+Where:
+- `SS` represent a two-character alphanumeric State Code;
+- `E` represents an alphabetical Emergency Hospital Type Code;
+- `QQQ` represents a three-digit Sequence Number.
+
+The constructor performs no error checking, but will throw an exception if `n` has more than
+seven characters.
+"""
 struct EmergencyHospitalCCN <: ProviderCCN
     number::String7
 end
 
+"""
+    SupplierCCN
+    SupplierCCN(n::AbstractString)
+
+A type representing a Medicare or Medicaid Supplier.
+
+Suppliers use ten-character identifiers with the following format:
+> `SSTQQQQQQQ`
+Where:
+- `SS` represent a two-character alphanumeric State Code;
+- `T` represents a Supplier Type Code;
+- `QQQQQQQ` represents a seven-digit Sequence Number.
+
+The constructor performs no error checking, but will throw an exception if `n` has more than
+15 characters.
+"""
 struct SupplierCCN <: CCN
     number::String15
 end
@@ -58,12 +151,14 @@ end
 Construct a CCN from input `s`.
 
 # Arguments
-- `T::Type` (optional) - The type of the CCN. If no type is given, the best guess of the type will be made based on the format of the input `s`.
+- `T::Type` (optional) - The type of the CCN. If no type is given, the best guess of the type will be made based on the format of the input `s` using [`infer_ccn_type`](@ref).
 - `s::Union{AbstractString,Integer}` - The input to parse to create the CCN.
 
 # Return value
 Returns a CCN of concrete type `T` if given, else the type will be inferred from format of `s`.
 """
+function ccn end
+
 function ccn(::Type{SupplierCCN}, s::AbstractString)
     c = clean_ccn(s; max_length=10)
     return SupplierCCN(c)
@@ -100,6 +195,9 @@ in lower case.
 # Arguments
 - `s::Union{Integer,AbstractString}` - The value to clean.
 - `max_length::Integer = 6` - The maximum (and pad) length of the CCN. Should be either 6 (for providers) or 10 (for suppliers). Strings shorter than this length will be left-padded with zeros to this length.
+
+# Return
+The canonicalized form of `s`.
 """
 function clean_ccn end
 
@@ -124,12 +222,12 @@ end
 Infer the type of the CCN from a string in canonical CCN format.
 
 # Arguments
-- `s::Union{AbstractString,Integer}` - A value in canonical CCN format.
+- `s::Union{AbstractString,Integer}` - A string or integer value in canonical CCN format.
 
 # Return value
-The inferred type. Throws if the type cannot be inferred from the input.
+The inferred type, which will be a subtype of `CCN`. Throws if the type cannot be inferred from `s`.
 
-See also [`clean_ccn`](@ref).
+See also [`clean_ccn`](@ref) to canonicalize a CCN string.
 """
 function infer_ccn_type(s::AbstractString)
     length(s) ∉ (6, 10) && throw(ArgumentError("CCN must be a 6- or 10-character string"))
