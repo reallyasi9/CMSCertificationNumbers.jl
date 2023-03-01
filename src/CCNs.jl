@@ -207,7 +207,7 @@ function clean_ccn end
 
 function clean_ccn(s::AbstractString; max_length::Integer = 6)
     ss = uppercase(strip(s))
-    if length(ss) > 2 && ss[3] == "-" # dash sometimes appears between state code and remainder
+    if length(ss) > 2 && ss[3] == '-' # dash sometimes appears between state code and remainder
         ss = ss[1:2] * ss[4:end]
     end
     length(ss) > max_length && throw(ArgumentError("CCN cannot be more than $max_length characters in length"))
