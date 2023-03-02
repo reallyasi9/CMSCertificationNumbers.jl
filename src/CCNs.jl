@@ -273,6 +273,7 @@ function Base.isvalid(c::MedicareProviderCCN)
 end
 
 function Base.isvalid(c::MedicareProviderCCN, i::Int64)
+    (i < 0 || i > 6) && return false
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
@@ -287,16 +288,17 @@ function Base.isvalid(c::MedicaidOnlyProviderCCN)
     n = c.number
     length(n) == 6 || return false
     n[1:2] ∈ keys(_STATE_CODES) || return false
-    n[3] ∈ MEDICAID_TYPE_CODES || return false
+    n[3] ∈ _MEDICAID_TYPE_CODES || return false
     return mapreduce(isdigit, &, n[4:6])
 end
 
 function Base.isvalid(c::MedicaidOnlyProviderCCN, i::Int64)
+    (i < 0 || i > 6) && return false
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 3
-        return n[3] ∈ MEDICAID_TYPE_CODES
+        return n[3] ∈ _MEDICAID_TYPE_CODES
     else
         return isdigit(n[i])
     end
@@ -312,6 +314,7 @@ function Base.isvalid(c::IPPSExcludedProviderCCN)
 end
 
 function Base.isvalid(c::IPPSExcludedProviderCCN, i::Int64)
+    (i < 0 || i > 6) && return false
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
@@ -333,6 +336,7 @@ function Base.isvalid(c::EmergencyHospitalCCN)
 end
 
 function Base.isvalid(c::EmergencyHospitalCCN, i::Int64)
+    (i < 0 || i > 6) && return false
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
@@ -352,6 +356,7 @@ function Base.isvalid(c::SupplierCCN)
 end
 
 function Base.isvalid(c::SupplierCCN, i::Int64)
+    (i < 0 || i > 10) && return false
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
