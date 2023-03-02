@@ -269,7 +269,10 @@ function Base.isvalid(c::MedicareProviderCCN)
     length(n) == 6 || return false
     n[1:2] ∈ keys(_STATE_CODES) || return false
     mapreduce(isdigit, &, n[4:6]) || return false
-    return n[3] == 'P' || isdigit(n[3])
+    n[3] == 'P' && return true
+    isdigit(n[3]) || return false
+    sequence = parse(Int64, n[3:6])
+    return !isnothing(findfirst(x -> sequence ∈ first(x), _FACILITY_RANGES))
 end
 
 function Base.isvalid(c::MedicareProviderCCN, i::Int64)
@@ -277,10 +280,12 @@ function Base.isvalid(c::MedicareProviderCCN, i::Int64)
     n = c.number
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
-    elseif i == 3
-        return n[3] == 'P' || isdigit(n[3])
+    elseif i == 3 && n[i] == 'P'
+        return true
     else
-        return isdigit(n[i])
+        mapreduce(isdigit, &, n[3:6]) || return false
+        sequence = parse(Int64, n[3:6])
+        return !isnothing(findfirst(x -> sequence ∈ first(x), _FACILITY_RANGES))
     end
 end
 
