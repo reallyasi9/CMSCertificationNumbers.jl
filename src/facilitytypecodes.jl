@@ -70,10 +70,10 @@ const _EMERGENCY_CODES = Dict{Char, String}(
     'F' => "Federal Emergency Hospital",
 )
 
-const MEDICAID_TYPE_CODES = ('A', 'B', 'E', 'F', 'G', 'H', 'K', 'L', 'J')
-const IPPS_EXCLUDED_TYPE_CODES = ('M', 'R', 'S', 'T', 'U', 'W', 'Z')
+const _MEDICAID_TYPE_CODES = ('A', 'B', 'E', 'F', 'G', 'H', 'K', 'L', 'J')
+const _IPPS_EXCLUDED_TYPE_CODES = ('M', 'R', 'S', 'T', 'U', 'W', 'Z')
 
-const IPPS_PARENT_HOSPITAL_TYPES = Dict{Char, Pair{String, String}}(
+const _IPPS_PARENT_HOSPITAL_TYPES = Dict{Char, Pair{String, String}}(
     'A' => ("LTCH" => "20"),
     'B' => ("LTCH" => "21"),
     'C' => ("LTCH" => "22"),

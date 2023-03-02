@@ -240,8 +240,8 @@ function infer_ccn_type(s::AbstractString)
     if length(s) == 10 && tc ∈ keys(_SUPPLIER_CODES)
         return SupplierCCN
     else
-        tc ∈ MEDICAID_TYPE_CODES && return MedicaidOnlyProviderCCN
-        tc ∈ IPPS_EXCLUDED_TYPE_CODES && return IPPSExcludedProviderCCN
+        tc ∈ _MEDICAID_TYPE_CODES && return MedicaidOnlyProviderCCN
+        tc ∈ _IPPS_EXCLUDED_TYPE_CODES && return IPPSExcludedProviderCCN
         s[6] ∈ keys(_EMERGENCY_CODES) && return EmergencyHospitalCCN
         (tc == 'P' || isdigit(tc)) && return MedicareProviderCCN
     end
@@ -306,8 +306,8 @@ function Base.isvalid(c::IPPSExcludedProviderCCN)
     n = c.number
     length(n) == 6 || return false
     n[1:2] ∈ keys(_STATE_CODES) || return false
-    n[3] ∈ IPPS_EXCLUDED_TYPE_CODES || return false
-    isdigit(n[4]) || n[4] ∈ keys(IPPS_PARENT_HOSPITAL_TYPES) || return false
+    n[3] ∈ _IPPS_EXCLUDED_TYPE_CODES || return false
+    isdigit(n[4]) || n[4] ∈ keys(_IPPS_PARENT_HOSPITAL_TYPES) || return false
     return mapreduce(isdigit, &, n[5:6])
 end
 
@@ -316,9 +316,9 @@ function Base.isvalid(c::IPPSExcludedProviderCCN, i::Int64)
     if i == 1 || i == 2
         return n[1:2] ∈ keys(_STATE_CODES)
     elseif i == 3
-        return n[3] ∈ IPPS_EXCLUDED_TYPE_CODES
+        return n[3] ∈ _IPPS_EXCLUDED_TYPE_CODES
     elseif i == 4
-        return isdigit(n[4]) || n[4] ∈ keys(IPPS_PARENT_HOSPITAL_TYPES)
+        return isdigit(n[4]) || n[4] ∈ keys(_IPPS_PARENT_HOSPITAL_TYPES)
     else
         return isdigit(n[i])
     end
@@ -540,7 +540,7 @@ function sequence_number(ccn::IPPSExcludedProviderCCN)
     sequence_code = ccn.number[4:6]
     if !isdigit(sequence_code[1])
         parent_code = sequence_code[1]
-        parent_type = get(IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
+        parent_type = get(_IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
         sequence_code = last(parent_type) * sequence_code[2:end]
     end
     return parse(Int64, sequence_code)
@@ -585,7 +585,7 @@ function decode(io::IO, ccn::IPPSExcludedProviderCCN)
     sequence_code = ccn.number[4:6]
     if !isdigit(sequence_code[1])
         parent_code = sequence_code[1]
-        parent_type = get(IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
+        parent_type = get(_IPPS_PARENT_HOSPITAL_TYPES, parent_code, ("invalid parent type" => ""))
         sequence = parse(Int64, last(parent_type) * sequence_code[2:end])
         print(io, " of parent ", first(parent_type), " [", parent_code, "] with sequence number ", sequence)
     else
