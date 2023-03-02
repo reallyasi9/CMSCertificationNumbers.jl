@@ -6,6 +6,9 @@ end
 DocTestFilters = [r"Stacktrace:[\s\S]+"]
 ```
 
+```@index
+```
+
 # CCNs
 
 [CCNs](https://github.com/reallyasi9/CCNs.jl) is a package that standardizes manipulation of CMS Certification Numbers in Julia.
@@ -26,6 +29,16 @@ CCNs are sequences of alphanumeric characters. Health care providers are assigne
 # Types
 
 Because the structure of the CCN depends on the type of provider, supplier, or facility it is describing, this package defines separate types to help the user be precise about what kind of CCN the identifier represents. The types are described below:
+
+```@docs
+CCN
+ProviderCCN
+MedicareProviderCCN
+MedicaidOnlyProviderCCN
+IPPSExcludedProviderCCN
+EmergencyHospitalCCN
+SupplierCCN
+```
 
 # Parsing
 
@@ -77,6 +90,10 @@ ERROR: ArgumentError: CCN cannot be more than 6 characters in length
 
 This method relies on the [`clean_ccn`](@ref) method, which is also exported for use.
 
+```@docs
+clean_ccn
+```
+
 ## `ccn` method
 
 You can create CCNs by automatically detecting the type based on the format of the code using the `ccn(::AbstractString)` method. There is no ambiguity in CCN types as long as the CCN is in canonical format. Use this method when:
@@ -124,13 +141,126 @@ ERROR: ArgumentError: CCN cannot be more than 6 characters in length
 
 The `ccn` method relies on [`infer_ccn_type`](@ref), which is also exported for convenience.
 
+```@docs
+ccn
+infer_ccn_type
+```
+
 # Inspecting
+
+Encoded in a CCN is information about the state where the facility is located, the type of the facility, and a sequence number assigned by CMS to the facility. You can inspect that information with the methods [`state_code`](@ref), [`facility_type_code`](@ref), and [`sequence_number`](@ref), respectively. You can also decode the State Code and Facility Type Code with the methods [`state`](@ref) and [`facility_type`](@ref), respectively, which returns an English-language description of the code as described in the CMS publications.
+
+Examples:
+
+```jldoctest
+julia> state_code(ccn("123456"))
+"12"
+
+julia> state_code(ccn("QQ3456")) # invalid state, but the code is still returned
+"QQ"
+
+julia> state(ccn("123456"))
+"Hawaii"
+
+julia> state(ccn("QQ3456")) # invalid state string available as CCNs.INVALID_STATE
+"invalid state"
+
+julia> facility_type_code(ccn("123456")) # some facility type codes are ranges of values, stylized as a string
+"3400-3499"
+
+julia> facility_type_code(ccn("12P456")) # most facility type codes are length=1 strings
+"P"
+
+julia> facility_type_code(ccn("120000")) # invalid facility code, but an attempt to parse and return something is still made
+"0000"
+
+julia> facility_type(ccn("123456"))
+"Rural Health Clinic (Provider-based)"
+
+julia> facility_type(ccn("12P456"))
+"Organ Procurement Organization (OPO)"
+
+julia> facility_type(ccn("120000")) # invalid facility type string available as CCNs.INVALID_FACILITY_TYPE
+"invalid facility type"
+
+julia> sequence_number(ccn("123456")) # note that the facility type code is 3400-3499
+56
+
+julia> sequence_number(ccn("12P456"))
+456
+
+julia> sequence_number(ccn("120000"))
+0
+```
+
+Also exported is a method [`decode`](@ref), which returns all the available information about the CCN as a stylized string. You can also provide an `IO` object as the first argument to `decode` to print the stylized string to a particular IO device.
+
+Examples:
+
+```jldoctest
+julia> decode(ccn("123456"))
+"123456: Medicare Provider in Hawaii [12] Rural Health Clinic (Provider-based) [3400-3499] sequence number 56"
+
+julia> decode(stderr, ccn("123456")) # returns nothing: writes to stderr instead
+
+julia> decode(ccn("120000"))
+"120000: Medicare Provider in Hawaii [12] invalid facility type [0000] sequence number 0"
+```
+
+```@docs
+state_code
+state
+facility_type_code
+facility_type
+sequence_number
+decode
+CCNs.INVALID_STATE
+CCNs.INVALID_FACILITY_TYPE
+```
 
 # Manipulating
 
-```@index
+**CCNs are subtypes of `AbstractString`**. This means any method that manipulates an `AbstractString` can be used on a CCN. The only caveat is that most of the operations return some other type of `AbstractString`, not a CCN subtype.
+
+Examples:
+
+```jldoctest
+julia> c = ccn("123456")
+MedicareProviderCCN("123456")
+
+julia> c[3]
+'3': ASCII/Unicode U+0033 (category Nd: Number, decimal digit)
+
+julia> c[4:6]
+"456"
+
+julia> reverse(c)
+"654321"
+
+julia> findall(x -> iseven(parse(Int, x)), c)
+3-element Vector{Int64}:
+ 2
+ 4
+ 6
 ```
 
-```@autodocs
-Modules = [CCNs]
+More useful, perhaps, are the `Base.isvalid` methods, which are customized to CCN types to check whether the CCN itself is valid, or whether individual characters in the CCN string are valid.
+
+```jldoctest
+julia> isvalid(ccn("123456"))
+true
+
+julia> isvalid(ccn("Q23456")) # state code is invalid
+false
+
+julia> isvalid(ccn("Q23456"), 2) # even though '2' is a valid second character in a state code, "Q2" is not valid, so this returns false
+false
+
+julia> isvalid(ccn("Q23456"), 3) # the facility type code and sequence number is valid, though
+true
+```
+
+```@docs
+Base.isvalid(::CCN)
+Base.isvalid(::CCN, ::Int64)
 ```
