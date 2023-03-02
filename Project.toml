@@ -1,7 +1,7 @@
 name = "CCNs"
 uuid = "dd30a495-ddaa-4e90-b4c8-e67bdf9f6075"
 authors = ["Phil Killewald <reallyasi9@users.noreply.github.com> and contributors"]
-version = "0.1.0"
+version = "1.0.0"
 
 [deps]
 InlineStrings = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
