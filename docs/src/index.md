@@ -1,7 +1,7 @@
 ```@meta
-CurrentModule = CCNs
+CurrentModule = CMSCertificationNumbers
 DocTestSetup = quote
-    using CCNs
+    using CMSCertificationNumbers
 end
 DocTestFilters = [r"Stacktrace:[\s\S]+"]
 ```
@@ -9,11 +9,11 @@ DocTestFilters = [r"Stacktrace:[\s\S]+"]
 ```@index
 ```
 
-# CCNs
+# CMSCertificationNumbers
 
-[CCNs](https://github.com/reallyasi9/CCNs.jl) is a package that standardizes manipulation of CMS Certification Numbers in Julia.
+[CMSCertificationNumbers](https://github.com/reallyasi9/CMSCertificationNumbers.jl) is a package that standardizes manipulation of CMS Certification Numbers in Julia.
 
-CCNs uniquely identify health care providers and suppliers who interact with the United States Medicare and Medicaid programs, run out of the Centers of Medicare and Medicaid Services (CMS). CCNs are standardized in the [_State Operations Manual_, CMS publication number 100-07](https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Internet-Only-Manuals-IOMs-Items/CMS1201984).
+CMS Certification Numbers (CCNs) uniquely identify health care providers and suppliers who interact with the United States Medicare and Medicaid programs, run out of the Centers of Medicare and Medicaid Services (CMS). CCNs are standardized in the [_State Operations Manual_, CMS publication number 100-07](https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Internet-Only-Manuals-IOMs-Items/CMS1201984).
 
 CCNs are sequences of alphanumeric characters. Health care providers are assigned 6-character CCNs, while health care suppliers are assigned 10-character CCNs. The canonical format used by this package to represent CCNs has the following structure:
 
@@ -162,7 +162,7 @@ julia> state_code(ccn("QQ3456")) # invalid state, but the code is still returned
 julia> state(ccn("123456"))
 "Hawaii"
 
-julia> state(ccn("QQ3456")) # invalid state string available as CCNs.INVALID_STATE
+julia> state(ccn("QQ3456")) # invalid state string available as CMSCertificationNumbers.INVALID_STATE
 "invalid state"
 
 julia> facility_type_code(ccn("123456")) # some facility type codes are ranges of values, stylized as a string
@@ -180,7 +180,7 @@ julia> facility_type(ccn("123456"))
 julia> facility_type(ccn("12P456"))
 "Organ Procurement Organization (OPO)"
 
-julia> facility_type(ccn("120000")) # invalid facility type string available as CCNs.INVALID_FACILITY_TYPE
+julia> facility_type(ccn("120000")) # invalid facility type string available as CMSCertificationNumbers.INVALID_FACILITY_TYPE
 "invalid facility type"
 
 julia> sequence_number(ccn("123456")) # note that the facility type code is 3400-3499
@@ -217,8 +217,8 @@ facility_type_code
 facility_type
 sequence_number
 decode
-CCNs.INVALID_STATE
-CCNs.INVALID_FACILITY_TYPE
+CMSCertificationNumbers.INVALID_STATE
+CMSCertificationNumbers.INVALID_FACILITY_TYPE
 ```
 
 # Manipulating

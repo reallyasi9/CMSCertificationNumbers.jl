@@ -52,6 +52,6 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using CCNs
-            DocMeta.setdocmeta!(CCNs, :DocTestSetup, :(using CCNs); recursive=true)
-            doctest(CCNs)'
+            using CMSCertificationNumbers
+            DocMeta.setdocmeta!(CMSCertificationNumbers, :DocTestSetup, :(using CMSCertificationNumbers); recursive=true)
+            doctest(CMSCertificationNumbers)'

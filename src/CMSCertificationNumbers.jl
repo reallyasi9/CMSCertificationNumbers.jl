@@ -1,4 +1,4 @@
-module CCNs
+module CMSCertificationNumbers
 
 using InlineStrings
 import Base: show, print, isvalid
@@ -384,7 +384,7 @@ The first two characters of a CCN encode the "state" where the entity is located
 interpreted loosely, as valid states include countries (like Canada) and territories (like
 (Guam).
 
-Returns `CCNs.INVALID_STATE` if the first two characters are not a valid state code.
+Returns `CMSCertificationNumbers.INVALID_STATE` if the first two characters are not a valid state code.
 """
 state(ccn::CCN) = get(_STATE_CODES, ccn.number[1:2], INVALID_STATE)
 
@@ -430,7 +430,7 @@ const INVALID_FACILITY_TYPE = "invalid facility type"
 
 Return a description of the facility type of `ccn` as a `String`.
 
-Returns `CCNs.INVALID_FACILITY_TYPE` if the facility type code is invalid for the CCN type.
+Returns `CMSCertificationNumbers.INVALID_FACILITY_TYPE` if the facility type code is invalid for the CCN type.
 """
 function facility_type end
 

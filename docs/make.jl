@@ -1,16 +1,16 @@
-using CCNs
+using CMSCertificationNumbers
 using Documenter
 
-DocMeta.setdocmeta!(CCNs, :DocTestSetup, :(using CCNs); recursive=true)
+DocMeta.setdocmeta!(CMSCertificationNumbers, :DocTestSetup, :(using CMSCertificationNumbers); recursive=true)
 
 makedocs(;
-    modules=[CCNs],
+    modules=[CMSCertificationNumbers],
     authors="Phil Killewald <reallyasi9@users.noreply.github.com> and contributors",
-    repo="https://github.com/reallyasi9/CCNs.jl/blob/{commit}{path}#{line}",
-    sitename="CCNs.jl",
+    repo="https://github.com/reallyasi9/CMSCertificationNumbers.jl/blob/{commit}{path}#{line}",
+    sitename="CMSCertificationNumbers.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://reallyasi9.github.io/CCNs.jl",
+        canonical="https://reallyasi9.github.io/CMSCertificationNumbers.jl",
         edit_link="development",
         assets=String[],
     ),
@@ -20,6 +20,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/reallyasi9/CCNs.jl",
+    repo="github.com/reallyasi9/CMSCertificationNumbers.jl",
     devbranch="development",
 )

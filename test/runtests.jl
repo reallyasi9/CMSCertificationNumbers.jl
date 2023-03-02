@@ -1,7 +1,7 @@
-using CCNs
+using CMSCertificationNumbers
 using Test
 
-@testset "CCNs.jl" begin
+@testset "CMSCertificationNumbers.jl" begin
     @testset "MedicareProviderCCN" begin
         @testset "constructor" begin
             @test MedicareProviderCCN("123456").number == "123456"
@@ -75,14 +75,14 @@ using Test
             @test state_code(MedicareProviderCCN("123456")) == "12"
             @test state_code(MedicareProviderCCN("XX3456")) == "XX"
             @test state(MedicareProviderCCN("123456")) == "Hawaii"
-            @test state(MedicareProviderCCN("XX3456")) == CCNs.INVALID_STATE
+            @test state(MedicareProviderCCN("XX3456")) == CMSCertificationNumbers.INVALID_STATE
 
             @test facility_type_code(MedicareProviderCCN("123456")) == "3400-3499"
             @test facility_type_code(MedicareProviderCCN("12P456")) == "P"
             @test_throws ArgumentError facility_type_code(MedicareProviderCCN("12X456"))
             @test facility_type(MedicareProviderCCN("123456")) == "Rural Health Clinic (Provider-based)"
             @test facility_type(MedicareProviderCCN("12P456")) == "Organ Procurement Organization (OPO)"
-            @test facility_type(MedicareProviderCCN("12X456")) == CCNs.INVALID_FACILITY_TYPE
+            @test facility_type(MedicareProviderCCN("12X456")) == CMSCertificationNumbers.INVALID_FACILITY_TYPE
 
             @test sequence_number(MedicareProviderCCN("123456")) == 56
             @test sequence_number(MedicareProviderCCN("12P456")) == 456
@@ -153,11 +153,11 @@ using Test
             @test state_code(MedicaidOnlyProviderCCN("12A456")) == "12"
             @test state_code(MedicaidOnlyProviderCCN("XXA456")) == "XX"
             @test state(MedicaidOnlyProviderCCN("12A456")) == "Hawaii"
-            @test state(MedicaidOnlyProviderCCN("XX3456")) == CCNs.INVALID_STATE
+            @test state(MedicaidOnlyProviderCCN("XX3456")) == CMSCertificationNumbers.INVALID_STATE
 
             @test facility_type_code(MedicaidOnlyProviderCCN("12A456")) == "A"
             @test facility_type(MedicaidOnlyProviderCCN("12A456")) == "NF (Formerly assigned to Medicaid SNF)"
-            @test facility_type(MedicaidOnlyProviderCCN("12X456")) == CCNs.INVALID_FACILITY_TYPE
+            @test facility_type(MedicaidOnlyProviderCCN("12X456")) == CMSCertificationNumbers.INVALID_FACILITY_TYPE
 
             @test sequence_number(MedicaidOnlyProviderCCN("12A456")) == 456
             @test_throws ArgumentError sequence_number(MedicaidOnlyProviderCCN("12XXXX"))
@@ -224,11 +224,11 @@ using Test
             @test state_code(IPPSExcludedProviderCCN("12M456")) == "12"
             @test state_code(IPPSExcludedProviderCCN("XXA456")) == "XX"
             @test state(IPPSExcludedProviderCCN("12M456")) == "Hawaii"
-            @test state(IPPSExcludedProviderCCN("XX3456")) == CCNs.INVALID_STATE
+            @test state(IPPSExcludedProviderCCN("XX3456")) == CMSCertificationNumbers.INVALID_STATE
 
             @test facility_type_code(IPPSExcludedProviderCCN("12M456")) == "M"
             @test facility_type(IPPSExcludedProviderCCN("12M456")) == "Psychiatric Unit of a CAH"
-            @test facility_type(IPPSExcludedProviderCCN("12X456")) == CCNs.INVALID_FACILITY_TYPE
+            @test facility_type(IPPSExcludedProviderCCN("12X456")) == CMSCertificationNumbers.INVALID_FACILITY_TYPE
 
             @test sequence_number(IPPSExcludedProviderCCN("12M456")) == 456
             @test_throws ArgumentError sequence_number(IPPSExcludedProviderCCN("12XXXX"))
@@ -296,11 +296,11 @@ using Test
             @test state_code(EmergencyHospitalCCN("12345E")) == "12"
             @test state_code(EmergencyHospitalCCN("XX345E")) == "XX"
             @test state(EmergencyHospitalCCN("12345E")) == "Hawaii"
-            @test state(EmergencyHospitalCCN("XX345E")) == CCNs.INVALID_STATE
+            @test state(EmergencyHospitalCCN("XX345E")) == CMSCertificationNumbers.INVALID_STATE
 
             @test facility_type_code(EmergencyHospitalCCN("12345E")) == "E"
             @test facility_type(EmergencyHospitalCCN("12345E")) == "Non-Federal Emergency Hospital"
-            @test facility_type(EmergencyHospitalCCN("12345X")) == CCNs.INVALID_FACILITY_TYPE
+            @test facility_type(EmergencyHospitalCCN("12345X")) == CMSCertificationNumbers.INVALID_FACILITY_TYPE
 
             @test sequence_number(EmergencyHospitalCCN("12345E")) == 345
             @test_throws ArgumentError sequence_number(EmergencyHospitalCCN("12XXXE"))
@@ -367,11 +367,11 @@ using Test
             @test state_code(SupplierCCN("12C4567890")) == "12"
             @test state_code(SupplierCCN("XXC4567890")) == "XX"
             @test state(SupplierCCN("12C4567890")) == "Hawaii"
-            @test state(SupplierCCN("XXC4567890")) == CCNs.INVALID_STATE
+            @test state(SupplierCCN("XXC4567890")) == CMSCertificationNumbers.INVALID_STATE
 
             @test facility_type_code(SupplierCCN("12C4567890")) == "C"
             @test facility_type(SupplierCCN("12C4567890")) == "Ambulatory Surgical Center"
-            @test facility_type(SupplierCCN("12345X")) == CCNs.INVALID_FACILITY_TYPE
+            @test facility_type(SupplierCCN("12345X")) == CMSCertificationNumbers.INVALID_FACILITY_TYPE
 
             @test sequence_number(SupplierCCN("12C4567890")) == 4567890
             @test_throws ArgumentError sequence_number(SupplierCCN("12CXXXXXXX"))

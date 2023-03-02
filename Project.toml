@@ -1,4 +1,4 @@
-name = "CCNs"
+name = "CMSCertificationNumbers"
 uuid = "dd30a495-ddaa-4e90-b4c8-e67bdf9f6075"
 authors = ["Phil Killewald <reallyasi9@users.noreply.github.com> and contributors"]
 version = "1.0.0"
