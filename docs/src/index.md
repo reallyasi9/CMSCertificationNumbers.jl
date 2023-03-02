@@ -1,5 +1,9 @@
 ```@meta
 CurrentModule = CCNs
+DocTestSetup = quote
+    using CCNs
+end
+DocTestFilters = [r"Stacktrace:[\s\S]+"]
 ```
 
 # CCNs
