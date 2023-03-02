@@ -54,10 +54,10 @@ using Test
             @test [isvalid(MedicareProviderCCN("12P456"), i) for i in 1:6] == fill(true, 6)
             # Too many characters
             @test !isvalid(MedicareProviderCCN("1234567"))
-            @test [isvalid(MedicareProviderCCN("1234567"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            @test [isvalid(MedicareProviderCCN("1234567"), i) for i in 1:7] == [true, true, true, true, true, true, false]
             # Not enough characters
             @test !isvalid(MedicareProviderCCN("12345"))
-            @test [isvalid(MedicareProviderCCN("12345"), i) for i in 1:5] == fill(true, 5) # all characters are valid
+            @test [isvalid(MedicareProviderCCN("12345"), i) for i in 1:5] == fill(true, 5)
             # Invalid state code
             @test !isvalid(MedicareProviderCCN("XX3456"))
             @test [isvalid(MedicareProviderCCN("XX3456"), i) for i in 1:6] == [false, false, true, true, true, true]
@@ -132,7 +132,7 @@ using Test
             @test [isvalid(MedicaidOnlyProviderCCN("12A456"), i) for i in 1:6] == fill(true, 6)
             # Too many characters
             @test !isvalid(MedicaidOnlyProviderCCN("12A4567"))
-            @test [isvalid(MedicaidOnlyProviderCCN("12A4567"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            @test [isvalid(MedicaidOnlyProviderCCN("12A4567"), i) for i in 1:7] == [true, true, true, true, true, true, false]
             # Not enough characters
             @test !isvalid(MedicaidOnlyProviderCCN("12A45"))
             @test [isvalid(MedicaidOnlyProviderCCN("12A45"), i) for i in 1:5] == fill(true, 5) # all characters are valid
@@ -203,7 +203,7 @@ using Test
             @test [isvalid(IPPSExcludedProviderCCN("12M456"), i) for i in 1:6] == fill(true, 6)
             # Too many characters
             @test !isvalid(IPPSExcludedProviderCCN("12M4567"))
-            @test [isvalid(IPPSExcludedProviderCCN("12M4567"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            @test [isvalid(IPPSExcludedProviderCCN("12M4567"), i) for i in 1:7] == [true, true, true, true, true, true, false]
             # Not enough characters
             @test !isvalid(IPPSExcludedProviderCCN("12M45"))
             @test [isvalid(IPPSExcludedProviderCCN("12M45"), i) for i in 1:5] == fill(true, 5) # all characters are valid
@@ -275,7 +275,7 @@ using Test
             @test [isvalid(EmergencyHospitalCCN("12345E"), i) for i in 1:6] == fill(true, 6)
             # Too many characters
             @test !isvalid(EmergencyHospitalCCN("12345E7"))
-            @test [isvalid(EmergencyHospitalCCN("12345E7"), i) for i in 1:7] == fill(true, 7) # all characters are valid
+            @test [isvalid(EmergencyHospitalCCN("12345E7"), i) for i in 1:7] == [true, true, true, true, true, true, false]
             # Not enough characters
             @test !isvalid(EmergencyHospitalCCN("12345"))
             @test [isvalid(EmergencyHospitalCCN("12345"), i) for i in 1:5] == fill(true, 5) # all characters are valid
@@ -346,7 +346,7 @@ using Test
             @test [isvalid(SupplierCCN("12C4567890"), i) for i in 1:10] == fill(true, 10)
             # Too many characters
             @test !isvalid(SupplierCCN("12C45678901"))
-            @test [isvalid(SupplierCCN("12C45678901"), i) for i in 1:11] == fill(true, 11) # all characters are valid
+            @test [isvalid(SupplierCCN("12C45678901"), i) for i in 1:11] == [true, true, true, true, true, true, true, true, true, true, false]
             # Not enough characters
             @test !isvalid(SupplierCCN("12C456789"))
             @test [isvalid(SupplierCCN("12C456789"), i) for i in 1:9] == fill(true, 9) # all characters are valid

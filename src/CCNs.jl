@@ -276,17 +276,11 @@ function Base.isvalid(c::MedicareProviderCCN)
 end
 
 function Base.isvalid(c::MedicareProviderCCN, i::Int64)
-    (i < 0 || i > 6) && return false
     n = c.number
-    if i == 1 || i == 2
-        return n[1:2] ∈ keys(_STATE_CODES)
-    elseif i == 3 && n[i] == 'P'
-        return true
-    else
-        mapreduce(isdigit, &, n[3:6]) || return false
-        sequence = parse(Int64, n[3:6])
-        return !isnothing(findfirst(x -> sequence ∈ first(x), _FACILITY_RANGES))
-    end
+    (i < 1 || i > 6 || i > length(n)) && return false
+    i <= 2 && return n[i] ∈ getindex.(keys(_STATE_CODES), i)
+    i == 3 && return n[i] == 'P' || isdigit(n[i])
+    return isdigit(n[i])
 end
 
 function Base.isvalid(c::MedicaidOnlyProviderCCN)
@@ -298,15 +292,11 @@ function Base.isvalid(c::MedicaidOnlyProviderCCN)
 end
 
 function Base.isvalid(c::MedicaidOnlyProviderCCN, i::Int64)
-    (i < 0 || i > 6) && return false
     n = c.number
-    if i == 1 || i == 2
-        return n[1:2] ∈ keys(_STATE_CODES)
-    elseif i == 3
-        return n[3] ∈ _MEDICAID_TYPE_CODES
-    else
-        return isdigit(n[i])
-    end
+    (i < 1 || i > 6 || i > length(n)) && return false
+    i <= 2 && return n[i] ∈ getindex.(keys(_STATE_CODES), i)
+    i == 3 && return n[i] ∈ _MEDICAID_TYPE_CODES
+    return isdigit(n[i])
 end
 
 function Base.isvalid(c::IPPSExcludedProviderCCN)
@@ -319,17 +309,12 @@ function Base.isvalid(c::IPPSExcludedProviderCCN)
 end
 
 function Base.isvalid(c::IPPSExcludedProviderCCN, i::Int64)
-    (i < 0 || i > 6) && return false
     n = c.number
-    if i == 1 || i == 2
-        return n[1:2] ∈ keys(_STATE_CODES)
-    elseif i == 3
-        return n[3] ∈ _IPPS_EXCLUDED_TYPE_CODES
-    elseif i == 4
-        return isdigit(n[4]) || n[4] ∈ keys(_IPPS_PARENT_HOSPITAL_TYPES)
-    else
-        return isdigit(n[i])
-    end
+    (i < 1 || i > 6 || i > length(n)) && return false
+    i <= 2 && return n[i] ∈ getindex.(keys(_STATE_CODES), i)
+    i == 3 && return n[i] ∈ _IPPS_EXCLUDED_TYPE_CODES
+    i == 4 && return isdigit(n[4]) || n[i] ∈ keys(_IPPS_PARENT_HOSPITAL_TYPES)
+    return isdigit(n[i])
 end
 
 function Base.isvalid(c::EmergencyHospitalCCN)
@@ -341,15 +326,11 @@ function Base.isvalid(c::EmergencyHospitalCCN)
 end
 
 function Base.isvalid(c::EmergencyHospitalCCN, i::Int64)
-    (i < 0 || i > 6) && return false
     n = c.number
-    if i == 1 || i == 2
-        return n[1:2] ∈ keys(_STATE_CODES)
-    elseif i == 6
-        return n[6] ∈ keys(_EMERGENCY_CODES)
-    else
-        return isdigit(n[i])
-    end
+    (i < 1 || i > 6 || i > length(n)) && return false
+    i <= 2 && return n[i] ∈ getindex.(keys(_STATE_CODES), i)
+    i == 6 && return n[i] ∈ keys(_EMERGENCY_CODES)
+    return isdigit(n[i])
 end
 
 function Base.isvalid(c::SupplierCCN)
@@ -361,15 +342,11 @@ function Base.isvalid(c::SupplierCCN)
 end
 
 function Base.isvalid(c::SupplierCCN, i::Int64)
-    (i < 0 || i > 10) && return false
     n = c.number
-    if i == 1 || i == 2
-        return n[1:2] ∈ keys(_STATE_CODES)
-    elseif i == 3
-        return n[3] ∈ keys(_SUPPLIER_CODES)
-    else
-        return isdigit(n[i])
-    end
+    (i < 1 || i > 10 || i > length(n)) && return false
+    i <= 2 && return n[i] ∈ getindex.(keys(_STATE_CODES), i)
+    i == 3 && return n[i] ∈ keys(_SUPPLIER_CODES)
+    return isdigit(n[i])
 end
 
 function Base.isvalid(::Type{T}, value) where {T <: CCN}

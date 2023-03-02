@@ -201,7 +201,10 @@ Examples:
 julia> decode(ccn("123456"))
 "123456: Medicare Provider in Hawaii [12] Rural Health Clinic (Provider-based) [3400-3499] sequence number 56"
 
-julia> decode(stderr, ccn("123456")) # returns nothing: writes to stderr instead
+julia> buf = IOBuffer(); decode(buf, ccn("123456")) # returns nothing: writes to buf instead
+
+julia> String(take!(buf))
+"123456: Medicare Provider in Hawaii [12] Rural Health Clinic (Provider-based) [3400-3499] sequence number 56"
 
 julia> decode(ccn("120000"))
 "120000: Medicare Provider in Hawaii [12] invalid facility type [0000] sequence number 0"
@@ -246,6 +249,10 @@ julia> findall(x -> iseven(parse(Int, x)), c)
 
 More useful, perhaps, are the `Base.isvalid` methods, which are customized to CCN types to check whether the CCN itself is valid, or whether individual characters in the CCN string are valid.
 
+!!! note "A note about validity"
+
+    The `isvalid(::CCN, ::Int)` method tests whether the character a given index within a CCN string is valid _for that position only_, _not_ whether the entire CCN is valid nor whether the character is part of a valid code (i.e., a valid State Code).
+
 ```jldoctest
 julia> isvalid(ccn("123456"))
 true
@@ -253,10 +260,7 @@ true
 julia> isvalid(ccn("Q23456")) # state code is invalid
 false
 
-julia> isvalid(ccn("Q23456"), 2) # even though '2' is a valid second character in a state code, "Q2" is not valid, so this returns false
-false
-
-julia> isvalid(ccn("Q23456"), 3) # the facility type code and sequence number is valid, though
+julia> isvalid(ccn("Q23456"), 2) # '2' is a valid character for the second character of the state code
 true
 ```
 
