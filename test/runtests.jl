@@ -1,4 +1,5 @@
 using CMSCertificationNumbers
+using CSV
 using Test
 
 @testset "CMSCertificationNumbers.jl" begin
@@ -391,10 +392,6 @@ using Test
         @test codeunit(c, 1) == 0x31 # '1' in UTF-8
         @test iterate(c) == ('1', 2)
         @test iterate(c, 2) == ('2', 3)
-        @test transcode(UInt16, c) == UInt16[0x0031, 0x0032, 0x0050, 0x0034, 0x0035, 0x0036] # "12P456" in UTF-16
-        @test reverse(c) == "654P21"
-
-        # surprisingly, everything else in the AbstractString interface follows from those definitions
         @test length(c) == 6  # BEWARE: only valid characters are counted!
         @test sizeof(c) == 6
         @test c * "ABC" == "12P456ABC"
@@ -410,17 +407,8 @@ using Test
         @test cmp(c, "12P455") == 1
         @test lpad(c, 10, 'x') == "xxxx12P456"
         @test rpad(c, 10, 'x') == "12P456xxxx"
-        @test findfirst('4', c) == 4
-        @test findnext('4', c, 5) === nothing
-        @test findlast(<('5'), c) == 4
-        @test findprev("2P", c, 5) == 2:3
         @test occursin(r"\D4\d", c) == true
         @test replace(c, r"\D4(\d)"=>s"hi\1") == "12hi56"
-        @test split(c, "P4") == ["12", "56"]
-        @test rsplit(c, "4", limit=2, keepempty=true) == ["12P", "56"]
-        @test strip(c, ['1', '6']) == "2P45"
-        @test lstrip(c, ['1', '6']) == "2P456"
-        @test rstrip(c, ['1', '6']) == "12P45"
         @test startswith(c, "12") == true
         @test startswith(c, r"1\dp"i) == true
         @test endswith(c, "56") == true
@@ -430,24 +418,39 @@ using Test
         @test last(c, 2) == "56"
         @test uppercase(c) == "12P456"
         @test lowercase(c) == "12p456"
-        @test uppercasefirst(c) == titlecase(c) == "12P456"
-        @test lowercasefirst(c) == c
         @test join([c, c], ",") == "12P456,12P456"
         @test chop(c) == "12P45"
 
         @test chomp(c) == c
-        @test thisind(c, 3) == 3
-        @test nextind(c, 3) == 4
-        @test prevind(c, 3) == 2
         @test textwidth(c) == 6
         @test isascii(c) == true
-        @test escape_string(c) == c
-        @test unescape_string(c) == c
 
         if VERSION >= v"1.8"
             @test collect(eachsplit(c, "P4")) == ["12", "56"]
             @test chopprefix(c, "12") == "P456"
             @test chopsuffix(c, "56") == "12P4"
         end
+    end
+
+    @testset "CSV" begin
+        # The most common use case is reading CCNs from CSVs. CSV uses SentinelArrays, which
+        # has some awkward behavior with InlineStrings (the default sentinel of a String7
+        # appears to have length of 255).
+        csv = b"""a
+12345
+123456
+"""
+        c = MedicareProviderCCN["012345", "123456"]
+        f = CSV.File(csv; types=Dict(:a=>MedicareProviderCCN))
+        @test f.a == c
+
+        io = IOBuffer()
+        CSV.write(io, f)
+        # the writer corrects the string by left padding with zeros
+        written_csv = b"""a
+012345
+123456
+"""
+        @test take!(io) == written_csv
     end
 end

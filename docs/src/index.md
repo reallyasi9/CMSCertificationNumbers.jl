@@ -223,7 +223,7 @@ CMSCertificationNumbers.INVALID_FACILITY_TYPE
 
 # Manipulating
 
-**CCNs are subtypes of `AbstractString`**. This means any method that manipulates an `AbstractString` can be used on a CCN. The only caveat is that most of the operations return some other type of `AbstractString`, not a CCN subtype.
+CCNs implement many `AbstractString` methods. The only caveat about the exported methods is that most of the operations return some other type of `AbstractString`, not a CCN subtype.
 
 Examples:
 
@@ -237,14 +237,8 @@ julia> c[3]
 julia> c[4:6]
 "456"
 
-julia> reverse(c)
-"654321"
-
-julia> findall(x -> iseven(parse(Int, x)), c)
-3-element Vector{Int64}:
- 2
- 4
- 6
+julia> replace(c, r"(\d)3" => s"\1P")
+"12P456"
 ```
 
 More useful, perhaps, are the `Base.isvalid` methods, which are customized to CCN types to check whether the CCN itself is valid, or whether individual characters in the CCN string are valid.

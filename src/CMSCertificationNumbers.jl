@@ -1,7 +1,6 @@
 module CMSCertificationNumbers
 
 using InlineStrings
-import Base: show, print, isvalid
 
 export MedicareProviderCCN, MedicaidOnlyProviderCCN, IPPSExcludedProviderCCN, EmergencyHospitalCCN, SupplierCCN
 export ccn, infer_ccn_type, clean_ccn, decode, state, state_code, facility_type, facility_type_code, sequence_number
@@ -23,7 +22,7 @@ CCNs inherit from `AbstractString`, so methods like `length`, `get`, etc. are al
 
 CCNs are defined by CMS Manual System publication number 100-07 "State Operations Provider Certification".
 """
-abstract type CCN <: AbstractString end
+abstract type CCN end
 
 include("abstractstringinterface.jl")
 include("statecodes.jl")
@@ -252,10 +251,10 @@ Base.convert(::Type{T}, s::AbstractString) where {T <: CCN} = T(s)
 Base.convert(::Type{T}, i::Integer) where {T <: CCN} = T(string(i, base=10))
 Base.convert(::Type{T}, n::Number) where {T <: CCN} = T(string(Integer(n), base=10))
 
-Base.parse(::Type{T}, s::AbstractString) where {T <: CCN} = ccn(T, s)
-function Base.tryparse(::Type{T}, s::AbstractString) where {T <: CCN}
+Base.parse(::Type{T}, s) where {T <: CCN} = ccn(T, s)
+function Base.tryparse(::Type{T}, s) where {T <: CCN}
     try
-        return parse(T, s)
+        return ccn(T, s)
     catch
         return nothing
     end
