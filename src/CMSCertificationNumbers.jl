@@ -8,17 +8,18 @@ export ccn, infer_ccn_type, clean_ccn, decode, state, state_code, facility_type,
 """
     CCN
 
-A representation of a CMS Certification Number.
+An abstract type representing a CMS Certification Number.
 
 CCNs are a uniform way of identifying providers or suppliers who currently or who ever have participated in the Medicare or Medicaid programs.
 A CCN is a 6- or 10-character alphanumeric string that encodes the provider or supplier's (respectively) State and facility type.
 
 CCNs can be constructed from `AbstractString` or `Integer` objects, but `Integer`s can only represent a subset of all possible CCNs.
 For the most performant parsing of stored data, directly construct the known CCN type using constructor calls like
-[`MedicareProviderCCN(s)`](@ref). For slightly less performance, use [`ccn(T<:CCN, s)`](@ref) or [`parse(T<:CCN, s)`](@ref) to canonicalize the format of `s`
+[`MedicareProviderCCN(s)`](@ref). For slightly more convenience and less performance, use [`ccn(T<:CCN, s)`](@ref) or [`parse(T<:CCN, s)`](@ref) to canonicalize the format of `s`
 and perform simple error checking. To infer what type of CCN a given value represents, use [`infer_ccn_type(s)`](@ref).
 
-CCNs inherit from `AbstractString`, so methods like `length`, `get`, etc. are all defined and work as if the CCN were a string identifier.
+CCNs inherit many methods from `AbstractString`, like `length`, `get`, etc.. You can work with CCNs as if they were `String`s, for the most part.
+However, most of the `AbstractString` interface as implemented will return `String` instances, _not_ modified `CCN` instances.
 
 CCNs are defined by CMS Manual System publication number 100-07 "State Operations Provider Certification".
 """
@@ -114,8 +115,8 @@ Emergency Hospital providers use six-character identifiers with the following fo
 > `SSQQQE`
 Where:
 - `SS` represent a two-character alphanumeric State Code;
-- `E` represents an alphabetical Emergency Hospital Type Code;
-- `QQQ` represents a three-digit Sequence Number.
+- `QQQ` represents a three-digit Sequence Number;
+- `E` represents an alphabetical Emergency Hospital Type Code.
 
 The constructor performs no error checking, but will throw an exception if `n` has more than
 seven characters.

@@ -258,7 +258,7 @@ julia> isvalid(ccn("Q23456"), 2) # '2' is a valid character for the second chara
 true
 ```
 
-You can also use `Base.invald(::Type{<:CCN}, ::AbstractString)` to determine if a given string is valid for a given CCN subtype without actually creating the subtype in question.
+You can also use `Base.isvalid(::Type{<:CCN}, ::AbstractString)` to determine if a given string is valid for a given CCN subtype without actually creating the subtype in question.
 
 ```jldoctest
 julia> isvalid(MedicareProviderCCN, "123456")
